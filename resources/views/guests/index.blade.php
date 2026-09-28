@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body class="guest-page">
     <header class="topbar">
         <a class="brand" href="{{ route('guests.index') }}" aria-label="BPS Provinsi Sumatera Selatan, beranda">
@@ -98,7 +100,7 @@
                 <p>Lengkapi data berikut untuk mendapatkan nomor antrean.</p>
             </div>
             @if ($errors->any())
-                <div class="form-errors" role="alert">Periksa kembali isian Anda. Semua kolom wajib diisi dengan benar.</div>
+            <div class="form-errors" role="alert">Periksa kembali isian Anda. Semua kolom wajib diisi dengan benar.</div>
             @endif
             <form class="guest-form" action="{{ route('guests.store') }}" method="POST">
                 @csrf
@@ -110,8 +112,8 @@
                     <fieldset class="field field--wide gender-field">
                         <legend>Jenis kelamin</legend>
                         <div class="gender-options">
-                            <label><input type="radio" name="gender" value="Laki-laki" @checked(old('gender') === 'Laki-laki') required><span>Laki-laki</span></label>
-                            <label><input type="radio" name="gender" value="Perempuan" @checked(old('gender') === 'Perempuan')><span>Perempuan</span></label>
+                            <label><input type="radio" name="gender" value="Laki-laki" @checked(old('gender')==='Laki-laki' ) required><span>Laki-laki</span></label>
+                            <label><input type="radio" name="gender" value="Perempuan" @checked(old('gender')==='Perempuan' )><span>Perempuan</span></label>
                         </div>
                     </fieldset>
                     <label class="field field--wide">Asal instansi
@@ -129,12 +131,12 @@
                     <label class="field field--wide">Pekerjaan
                         <select name="occupation" data-occupation required>
                             <option value="">Pilih pekerjaan</option>
-                            <option value="ASN" @selected(old('occupation') === 'ASN')>Aparatur Sipil Negara</option>
-                            <option value="SWASTA" @selected(old('occupation') === 'SWASTA')>Karyawan Swasta</option>
-                            <option value="WIRASWASTA" @selected(old('occupation') === 'WIRASWASTA')>Wiraswasta</option>
-                            <option value="PENELITI" @selected(old('occupation') === 'PENELITI')>Peneliti</option>
-                            <option value="PELAJAR" @selected(old('occupation') === 'PELAJAR')>Pelajar/Mahasiswa</option>
-                            <option value="LAINNYA" @selected(old('occupation') === 'LAINNYA')>Lainnya</option>
+                            <option value="ASN" @selected(old('occupation')==='ASN' )>Aparatur Sipil Negara</option>
+                            <option value="SWASTA" @selected(old('occupation')==='SWASTA' )>Karyawan Swasta</option>
+                            <option value="WIRASWASTA" @selected(old('occupation')==='WIRASWASTA' )>Wiraswasta</option>
+                            <option value="PENELITI" @selected(old('occupation')==='PENELITI' )>Peneliti</option>
+                            <option value="PELAJAR" @selected(old('occupation')==='PELAJAR' )>Pelajar/Mahasiswa</option>
+                            <option value="LAINNYA" @selected(old('occupation')==='LAINNYA' )>Lainnya</option>
                         </select>
                         @error('occupation')<small class="field-error">{{ $message }}</small>@enderror
                     </label>
@@ -144,10 +146,10 @@
                     </label>
                     <label class="field field--wide">Tipe keperluan
                         <select name="purpose" data-purpose-input required>
-                            <option value="PST" @selected(old('purpose', request('purpose', 'PST')) === 'PST')>PST</option>
-                            <option value="LPSE" @selected(old('purpose', request('purpose')) === 'LPSE')>LPSE</option>
-                            <option value="PPID" @selected(old('purpose', request('purpose')) === 'PPID')>PPID</option>
-                            <option value="KEGIATAN" @selected(old('purpose', request('purpose')) === 'KEGIATAN')>Kegiatan lainnya</option>
+                            <option value="PST" @selected(old('purpose', request('purpose', 'PST' ))==='PST' )>PST</option>
+                            <option value="LPSE" @selected(old('purpose', request('purpose'))==='LPSE' )>LPSE</option>
+                            <option value="PPID" @selected(old('purpose', request('purpose'))==='PPID' )>PPID</option>
+                            <option value="KEGIATAN" @selected(old('purpose', request('purpose'))==='KEGIATAN' )>Kegiatan lainnya</option>
                         </select>
                         @error('purpose')<small class="field-error">{{ $message }}</small>@enderror
                     </label>
@@ -162,4 +164,5 @@
         </section>
     </div>
 </body>
+
 </html>

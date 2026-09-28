@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Antrean {{ $entry->queue_no }} | BPS Sumsel</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body class="receipt-page">
     <main class="receipt-shell">
         <article class="thermal-receipt">
@@ -17,9 +19,18 @@
             <p class="receipt-service">{{ $serviceName }}@if ($entry->purpose_other)<br>{{ $entry->purpose_other }}@endif</p>
             <div class="receipt-rule receipt-rule--dashed"></div>
             <dl class="receipt-details">
-                <div><dt>Nama</dt><dd>{{ $entry->full_name }}</dd></div>
-                <div><dt>Instansi</dt><dd>{{ $entry->institution }}</dd></div>
-                <div><dt>Tanggal</dt><dd>{{ $entry->created_at->timezone(config('app.timezone'))->format('d/m/Y H:i') }}</dd></div>
+                <div>
+                    <dt>Nama</dt>
+                    <dd>{{ $entry->full_name }}</dd>
+                </div>
+                <div>
+                    <dt>Instansi</dt>
+                    <dd>{{ $entry->institution }}</dd>
+                </div>
+                <div>
+                    <dt>Tanggal</dt>
+                    <dd>{{ $entry->created_at->timezone(config('app.timezone'))->format('d/m/Y H:i') }}</dd>
+                </div>
             </dl>
             <p class="receipt-thanks">Terima kasih telah berkunjung.<br>Mohon menunggu nomor Anda dipanggil.</p>
             <p class="receipt-url">bps.go.id</p>
@@ -29,6 +40,9 @@
             <a href="{{ route('guests.index') }}">Kembali ke halaman utama</a>
         </div>
     </main>
-    <script>window.addEventListener('load', () => window.print());</script>
+    <script>
+        window.addEventListener('load', () => window.print());
+    </script>
 </body>
+
 </html>
