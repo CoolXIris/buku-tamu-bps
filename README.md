@@ -23,6 +23,21 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 ## Learning Laravel
 
+## Buku Tamu Admin
+
+Panel admin berada di `/adminbps-tamu`. Pengunjung tanpa sesi admin akan diarahkan ke halaman login Google; hanya akun dengan email terverifikasi yang tercantum di `GOOGLE_ADMIN_EMAILS` yang dapat masuk.
+
+Untuk mengaktifkan Google OAuth:
+
+1. Buat OAuth 2.0 Client ID tipe **Web application** pada Google Cloud Console.
+2. Tambahkan URL callback yang sama persis dengan `GOOGLE_REDIRECT_URI` pada daftar **Authorized redirect URIs**. Untuk server lokal, contohnya `http://127.0.0.1:8000/adminbps-tamu/google/callback`.
+3. Isi `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, dan `GOOGLE_ADMIN_EMAILS` di `.env`. Pisahkan beberapa email yang diizinkan dengan koma.
+4. Jalankan `php artisan migrate` untuk membuat tabel kunjungan dan status pelayanan, lalu `php artisan optimize:clear` setelah mengubah konfigurasi environment.
+
+Dashboard menampilkan jumlah kunjungan hari ini, status pelayanan, tren tujuh hari, serta distribusi layanan dan pekerjaan. Status kunjungan baru dimulai sebagai `waiting`; halaman daftar tamu nantinya dapat mengubahnya menjadi `serving` atau `completed`.
+
+## Learning Laravel
+
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
 You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.

@@ -19,5 +19,6 @@ class VisitorEntry extends Model
         'occupation_other',
         'purpose',
         'purpose_other',
+        'service_status',
     ];
 }

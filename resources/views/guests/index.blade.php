@@ -50,12 +50,12 @@
                 </button>
                 <button class="service-card service-card--lpse" type="button" data-open-form data-purpose="LPSE">
                     <span class="service-art"><span class="service-monogram">LPSE</span><span class="art-diamonds"><i></i><i></i><i></i></span></span>
-                    <span class="service-title">Pengadaan Secara Elektronik</span>
+                    <span class="service-title">Layanan Pengadaan Secara Elektronik</span>
                     <span class="service-arrow" aria-hidden="true">↗</span>
                 </button>
                 <button class="service-card service-card--ppid" type="button" data-open-form data-purpose="PPID">
                     <span class="service-art"><span class="service-monogram">PPID</span><span class="art-pages"><i></i><i></i><i></i></span></span>
-                    <span class="service-title">Informasi dan Dokumentasi</span>
+                    <span class="service-title">Pejabat Pengelola Informasi dan Dokumentasi</span>
                     <span class="service-arrow" aria-hidden="true">↗</span>
                 </button>
                 <button class="service-card service-card--event" type="button" data-open-form data-purpose="KEGIATAN">

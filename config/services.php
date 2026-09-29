@@ -37,4 +37,14 @@ return [
 
     'pst_digital_url' => env('PST_DIGITAL_URL', 'https://pst.bps.go.id/'),
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'admin_emails' => array_values(array_filter(array_map(
+            static fn (string $email): string => strtolower(trim($email)),
+            explode(',', (string) env('GOOGLE_ADMIN_EMAILS', '')),
+        ))),
+    ],
+
 ];
