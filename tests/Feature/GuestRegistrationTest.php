@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\QueueCounter;
 use App\Models\VisitorEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -54,6 +55,49 @@ class GuestRegistrationTest extends TestCase
         $response->assertRedirect(route('guests.index'))
             ->assertSessionHasErrors(['occupation_other', 'purpose_other']);
         $this->assertDatabaseCount('visitor_entries', 0);
+    }
+
+    public function test_counter_is_resynced_when_existing_queue_numbers_are_present(): void
+    {
+        VisitorEntry::query()->create([
+            'full_name' => 'Ayu',
+            'gender' => 'Perempuan',
+            'institution' => 'BPS',
+            'phone' => '081111111111',
+            'email' => 'ayu@example.test',
+            'occupation' => 'ASN',
+            'purpose' => 'LPSE',
+            'service_code' => 'LPSE',
+            'queue_number' => 1,
+            'queue_no' => 'LPSE0001',
+        ]);
+
+        VisitorEntry::query()->create([
+            'full_name' => 'Budi',
+            'gender' => 'Laki-laki',
+            'institution' => 'BPS',
+            'phone' => '082222222222',
+            'email' => 'budi@example.test',
+            'occupation' => 'ASN',
+            'purpose' => 'LPSE',
+            'service_code' => 'LPSE',
+            'queue_number' => 2,
+            'queue_no' => 'LPSE0002',
+        ]);
+
+        QueueCounter::query()->create([
+            'service_code' => 'LPSE',
+            'last_number' => 2,
+        ]);
+
+        $this->post(route('guests.store'), $this->guestData([
+            'purpose' => 'LPSE',
+            'full_name' => 'Citra',
+            'email' => 'citra@example.test',
+        ]))
+            ->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
+
+        $this->assertDatabaseHas('visitor_entries', ['queue_no' => 'LPSE0003']);
     }
 
     private function guestData(array $overrides = []): array

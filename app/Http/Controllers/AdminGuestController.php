@@ -51,7 +51,7 @@ class AdminGuestController extends Controller
         $entries = $this->filteredEntries($filters)
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->paginate(12)
+            ->paginate(10)
             ->withQueryString();
 
         return view('admin.guests.index', [
@@ -59,7 +59,7 @@ class AdminGuestController extends Controller
             'filters' => $filters,
             'services' => self::SERVICES,
             'statuses' => self::STATUSES,
-            'totalVisitors' => VisitorEntry::count(),
+            'activeVisitorCount' => VisitorEntry::query()->inProgress()->count(),
             'admin' => Auth::user(),
         ]);
     }

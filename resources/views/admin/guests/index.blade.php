@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#10263d">
+    <meta name="theme-color" content="#102d63">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Daftar Buku Tamu | BPS Sumsel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,11 +17,11 @@
     <header class="admin-topbar">
         <a class="admin-brand" href="{{ route('admin.dashboard') }}">
             <img class="admin-bps-logo" src="{{ asset('images/logo_bps.svg') }}" alt="">
-            <span><strong>Buku Tamu BPS Provinsi Sumsel</strong><small>Badan Pusat Statistik · Sumatera Selatan</small></span>
+            <span><strong>Buku Tamu</strong><small>BPS Provinsi Sumatera Selatan</small></span>
         </a>
         <nav class="admin-navigation" aria-label="Navigasi administrator">
             <a class="admin-nav-link" href="{{ route('admin.dashboard') }}"><span class="nav-glyph" aria-hidden="true">▥</span> Dashboard</a>
-            <a class="admin-nav-link is-current" href="{{ route('admin.guests.index') }}"><span class="nav-glyph" aria-hidden="true">♧</span> Daftar Buku Tamu <span class="nav-count">{{ $totalVisitors }}</span></a>
+            <a class="admin-nav-link is-current" href="{{ route('admin.guests.index') }}"><span class="nav-glyph" aria-hidden="true">♧</span> Daftar Buku Tamu <span class="nav-count">{{ $activeVisitorCount }}</span></a>
             <a class="admin-nav-link" href="{{ route('queue.screen') }}" target="_blank" rel="noopener"><span class="nav-glyph" aria-hidden="true">◉</span> Layar Antrean</a>
         </nav>
         <div class="admin-account">

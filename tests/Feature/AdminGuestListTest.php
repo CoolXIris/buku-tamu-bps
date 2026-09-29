@@ -24,13 +24,42 @@ class AdminGuestListTest extends TestCase
             'full_name' => 'Budi Pengadaan',
             'service_status' => 'serving',
         ]));
+        VisitorEntry::create($this->visitorData([
+            'queue_no' => 'PPID0001',
+            'service_code' => 'PPID',
+            'purpose' => 'PPID',
+            'service_status' => 'completed',
+        ]));
 
         $this->actingAs($admin)
             ->get(route('admin.guests.index', ['q' => 'Siti', 'service' => 'PST', 'status' => 'waiting']))
             ->assertOk()
             ->assertSee('PST0001')
             ->assertDontSee('LPSE0001')
-            ->assertSee('Siti Aminah');
+            ->assertSee('Siti Aminah')
+            ->assertViewHas('activeVisitorCount', 2);
+    }
+
+    public function test_guest_list_shows_ten_entries_per_page_and_can_open_older_entries(): void
+    {
+        $admin = User::factory()->create();
+
+        for ($number = 1; $number <= 11; $number++) {
+            VisitorEntry::create($this->visitorData([
+                'queue_no' => 'PST' . str_pad((string) $number, 4, '0', STR_PAD_LEFT),
+                'queue_number' => $number,
+            ]));
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.guests.index'))
+            ->assertOk()
+            ->assertViewHas('entries', fn($entries): bool => $entries->perPage() === 10 && $entries->lastPage() === 2);
+
+        $this->actingAs($admin)
+            ->get(route('admin.guests.index', ['page' => 2]))
+            ->assertOk()
+            ->assertSee('PST0001');
     }
 
     public function test_admin_can_read_guest_details_and_change_service_status(): void

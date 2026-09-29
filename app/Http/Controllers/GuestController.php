@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\QueueCounter;
 use App\Models\VisitorEntry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,37 +41,23 @@ class GuestController extends Controller
 
         $entry = DB::transaction(function () use ($validated): VisitorEntry {
             $serviceCode = $validated['purpose'];
-            $serviceDate = now()->toDateString();
+            $queuePrefix = $serviceCode === 'KEGIATAN' ? 'UMUM' : $serviceCode;
 
-            DB::table('queue_counters')->upsert(
-                [[
-                    'service_code' => $serviceCode,
-                    'service_date' => $serviceDate,
-                    'last_number' => 0,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]],
-                ['service_code', 'service_date'],
-                ['service_code'],
-            );
+            QueueCounter::firstOrCreate(['service_code' => $serviceCode], ['last_number' => 0]);
 
-            $counter = DB::table('queue_counters')
+            $counter = QueueCounter::query()
                 ->where('service_code', $serviceCode)
-                ->where('service_date', $serviceDate)
                 ->lockForUpdate()
                 ->first();
 
-            $nextNumber = $counter->last_number + 1;
-            DB::table('queue_counters')
-                ->where('id', $counter->id)
-                ->update(['last_number' => $nextNumber, 'updated_at' => now()]);
-            $queuePrefix = $serviceCode === 'KEGIATAN' ? 'UMUM' : $serviceCode;
+            $number = $counter->last_number + 1;
+            $counter->update(['last_number' => $number]);
 
             return VisitorEntry::create([
                 ...$validated,
                 'service_code' => $serviceCode,
-                'queue_number' => $nextNumber,
-                'queue_no' => $queuePrefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT),
+                'queue_number' => $number,
+                'queue_no' => $queuePrefix . str_pad((string) $number, 4, '0', STR_PAD_LEFT),
             ]);
         });
 

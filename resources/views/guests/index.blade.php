@@ -99,7 +99,7 @@
             </div>
             <div class="footer-contact">
                 <strong>Palembang, Sumatera Selatan</strong>
-                <span>Jl. Kapten Anwar Sastro No. 1694/113, Sungai Pangeran, Ilir Timur I</span>
+                <span>Jalan Kapten Anwar Sastro No. 1694/1131, Sungai Pangeran, Ilir Timur I, Sungai Pangeran, Kec. Ilir Tim. I, Kota Palembang, Sumatera Selatan 30114</span>
                 <span>bps1600@bps.go.id <i></i> (0711) 351665</span>
             </div>
             <span class="footer-copy">© BPS Provinsi Sumatera Selatan</span>

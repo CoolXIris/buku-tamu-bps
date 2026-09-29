@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#10263d">
+    <meta name="theme-color" content="#102d63">
     <title>Login Admin | Buku Tamu BPS Sumsel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
     <header class="admin-login-topbar">
         <a class="admin-brand" href="{{ route('guests.index') }}" aria-label="Ke halaman tamu">
             <img class="admin-bps-logo" src="{{ asset('images/logo_bps.svg') }}" alt="">
-            <span><strong>Buku Tamu BPS Provinsi Sumsel</strong><small>Badan Pusat Statistik · Sumatera Selatan</small></span>
+            <span><strong>Buku Tamu</strong><small>BPS Provinsi Sumatera Selatan</small></span>
         </a>
         <a class="back-to-guest" href="{{ route('guests.index') }}">Halaman tamu <span aria-hidden="true">↗</span></a>
     </header>
@@ -49,8 +49,7 @@
             <p class="login-security"><span aria-hidden="true">◈</span> Hanya akun Google yang telah diizinkan administrator BPS dapat mengakses dashboard.</p>
         </section>
         <aside class="login-aside">
-            <div class="aside-index">01 <span>/</span> BPS SUMSEL</div>
-            <div class="aside-lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <img class="login-aside-logo" src="{{ asset('images/logo_bps.svg') }}" alt="Logo BPS">
             <p>Data kunjungan,<br>terpantau dengan jelas.</p>
             <span class="aside-foot">STATISTIK · PELAYANAN · INFORMASI</span>
         </aside>

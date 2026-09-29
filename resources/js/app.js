@@ -88,7 +88,7 @@ if (visitsChartCanvas && window.adminVisitsChart) {
 				borderWidth: 1,
 				borderRadius: 3,
 				borderSkipped: false,
-				maxBarThickness: 38,
+				maxBarThickness: 24,
 			}],
 		},
 		options: {
@@ -97,7 +97,7 @@ if (visitsChartCanvas && window.adminVisitsChart) {
 			plugins: {
 				legend: { display: false },
 				tooltip: {
-					backgroundColor: '#10263d',
+					backgroundColor: '#102d63',
 					padding: 11,
 					displayColors: false,
 					callbacks: { label: (context) => `${context.parsed.y} pengunjung` },
@@ -107,7 +107,7 @@ if (visitsChartCanvas && window.adminVisitsChart) {
 				x: {
 					grid: { display: false },
 					border: { display: false },
-					ticks: { color: '#768396', font: { family: 'DM Sans', size: 10 }, maxRotation: 0, autoSkip: false },
+					ticks: { color: '#768396', font: { family: 'DM Sans', size: 10 }, maxRotation: 0, autoSkip: true },
 				},
 				y: {
 					beginAtZero: true,
