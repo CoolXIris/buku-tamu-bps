@@ -11,7 +11,7 @@
 <body class="receipt-page">
     <main class="receipt-shell">
         <article class="thermal-receipt">
-            <div class="receipt-brand"><span class="bps-mark" aria-hidden="true"><i></i><b></b><em></em></span><strong>BPS PROVINSI<br>SUMATERA SELATAN</strong></div>
+            <div class="receipt-brand"><strong>BPS PROVINSI SUMATERA SELATAN</strong></div>
             <p class="receipt-address">Jl. Kapten Anwar Sastro No. 1694/113<br>Palembang, Sumatera Selatan</p>
             <div class="receipt-rule"></div>
             <p class="receipt-caption">NOMOR ANTREAN</p>
