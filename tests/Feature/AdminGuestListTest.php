@@ -6,6 +6,8 @@ use App\Models\QueueCall;
 use App\Models\User;
 use App\Models\VisitorEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
@@ -60,6 +62,35 @@ class AdminGuestListTest extends TestCase
             ->get(route('admin.guests.index', ['page' => 2]))
             ->assertOk()
             ->assertSee('PST0001');
+    }
+
+    public function test_guest_list_orders_by_latest_insert_and_displays_wib_time(): void
+    {
+        $admin = User::factory()->create();
+
+        Carbon::setTestNow(Carbon::parse('2026-09-29 07:48:47', 'UTC'));
+        try {
+            $olderEntry = VisitorEntry::create($this->visitorData());
+            DB::table('visitor_entries')->where('id', $olderEntry->id)->update(['created_at' => '2026-09-29 11:55:00']);
+            $latestEntry = VisitorEntry::create($this->visitorData([
+                'queue_no' => 'UMUM0377',
+                'service_code' => 'KEGIATAN',
+                'purpose' => 'KEGIATAN',
+                'queue_number' => 377,
+            ]));
+
+            $this->actingAs($admin)
+                ->get(route('admin.guests.index'))
+                ->assertOk()
+                ->assertSee('14:48 WIB')
+                ->assertViewHas('entries', fn($entries): bool => $entries->first()->is($latestEntry));
+
+            $this->actingAs($admin)
+                ->getJson(route('admin.guests.show', $latestEntry))
+                ->assertJsonPath('created_at', '29/09/2026 14:48 WIB');
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_admin_can_read_guest_details_and_change_service_status(): void

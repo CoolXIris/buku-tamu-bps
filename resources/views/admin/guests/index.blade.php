@@ -94,6 +94,7 @@
                         $serviceName = ['PST' => 'PST', 'PPID' => 'PPID', 'LPSE' => 'LPSE', 'KEGIATAN' => 'Kegiatan lainnya'][$entry->service_code] ?? $entry->service_code;
                         $purposeName = ['PST' => 'Pelayanan Statistik Terpadu', 'PPID' => 'Informasi dan Dokumentasi', 'LPSE' => 'Pengadaan Secara Elektronik', 'KEGIATAN' => 'Kegiatan lainnya'][$entry->purpose] ?? $entry->purpose;
                         $statusName = $statuses[$entry->service_status] ?? $entry->service_status;
+                        $localCreatedAt = $entry->created_at->copy()->setTimezone('Asia/Jakarta');
                         @endphp
                         <tr data-guest-row data-status-url="{{ route('admin.guests.status', $entry) }}" data-detail-url="{{ route('admin.guests.show', $entry) }}" data-queue-no="{{ $entry->queue_no }}">
                             <td><span class="queue-pill">{{ $entry->queue_no }}</span></td>
@@ -106,7 +107,7 @@
                                 <div class="purpose-cell"><span class="service-pill service-pill--{{ strtolower($entry->service_code) }}">{{ $serviceName }}</span><span class="purpose-label">{{ $entry->purpose_other ?: $purposeName }}</span></div>
                             </td>
                             <td>
-                                <div class="arrival-time"><strong>{{ $entry->created_at->format('H:i') }} WIB</strong><small>{{ $entry->created_at->format('d/m/Y') }}</small></div>
+                                <div class="arrival-time"><strong>{{ $localCreatedAt->format('H:i') }} WIB</strong><small>{{ $localCreatedAt->format('d/m/Y') }}</small></div>
                             </td>
                             <td><span class="status-pill status-pill--{{ $entry->service_status }}"><i></i>{{ $statusName }}</span></td>
                             <td>

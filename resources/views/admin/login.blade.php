@@ -22,7 +22,7 @@
     </header>
     <main class="login-stage">
         <section class="login-panel">
-            <span class="login-eyebrow">RUANG ADMINISTRATOR</span>
+            <span class="login-eyebrow">ADMINISTRATOR</span>
             <h1>Selamat datang<br>kembali.</h1>
             <p>Masuk menggunakan akun Google admin BPS yang telah terdaftar.</p>
             @if (session('auth_error'))
