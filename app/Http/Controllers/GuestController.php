@@ -64,12 +64,13 @@ class GuestController extends Controller
             DB::table('queue_counters')
                 ->where('id', $counter->id)
                 ->update(['last_number' => $nextNumber, 'updated_at' => now()]);
+            $queuePrefix = $serviceCode === 'KEGIATAN' ? 'UMUM' : $serviceCode;
 
             return VisitorEntry::create([
                 ...$validated,
                 'service_code' => $serviceCode,
                 'queue_number' => $nextNumber,
-                'queue_no' => $serviceCode . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT),
+                'queue_no' => $queuePrefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT),
             ]);
         });
 

@@ -31,6 +31,15 @@ class GuestRegistrationTest extends TestCase
         $this->post(route('guests.store'), $this->guestData(['purpose' => 'LPSE']))
             ->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
         $this->assertDatabaseHas('visitor_entries', ['queue_no' => 'LPSE0001']);
+
+        $this->post(route('guests.store'), $this->guestData([
+            'purpose' => 'KEGIATAN',
+            'purpose_other' => 'Kegiatan BPS',
+        ]))->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
+        $this->assertDatabaseHas('visitor_entries', [
+            'service_code' => 'KEGIATAN',
+            'queue_no' => 'UMUM0001',
+        ]);
     }
 
     public function test_other_occupation_and_activity_require_details(): void
