@@ -50,8 +50,8 @@ class AdminDashboardController extends Controller
             ->pluck('visitor_count', 'visit_date');
 
         $days = collect(CarbonPeriod::create($today->copy()->subDays(6), $today));
-        $chartLabels = $days->map(fn (Carbon $day): string => $day->translatedFormat('D, d M'))->all();
-        $chartValues = $days->map(fn (Carbon $day): int => (int) ($dailyCounts[$day->toDateString()] ?? 0))->all();
+        $chartLabels = $days->map(fn(Carbon $day): string => $day->translatedFormat('D, d M'))->all();
+        $chartValues = $days->map(fn(Carbon $day): int => (int) ($dailyCounts[$day->toDateString()] ?? 0))->all();
 
         $serviceCounts = VisitorEntry::query()
             ->whereDate('created_at', $today)

@@ -103,7 +103,7 @@ class AdminGuestController extends Controller
             'status_label' => self::STATUSES[$visitorEntry->service_status],
             'call_event_id' => $callEvent?->id,
             'message' => $callEvent
-                ? 'Memanggil nomor antrean '.$visitorEntry->queue_no
+                ? 'Memanggil nomor antrean ' . $visitorEntry->queue_no
                 : 'Status antrean berhasil diperbarui.',
         ]);
     }
@@ -117,9 +117,19 @@ class AdminGuestController extends Controller
         $writer = new Writer;
         $writer->openToFile($tempPath);
         $writer->addRow(Row::fromValues([
-            'No Antrean', 'Tanggal', 'Waktu Masuk', 'Nama Lengkap', 'Asal Instansi',
-            'Keperluan', 'Detail Keperluan', 'Jenis Kelamin', 'No HP', 'Email',
-            'Pekerjaan', 'Detail Pekerjaan', 'Status Pelayanan',
+            'No Antrean',
+            'Tanggal',
+            'Waktu Masuk',
+            'Nama Lengkap',
+            'Asal Instansi',
+            'Keperluan',
+            'Detail Keperluan',
+            'Jenis Kelamin',
+            'No HP',
+            'Email',
+            'Pekerjaan',
+            'Detail Pekerjaan',
+            'Status Pelayanan',
         ]));
 
         foreach ($this->filteredEntries($filters)->orderBy('created_at')->orderBy('id')->cursor() as $entry) {
@@ -142,7 +152,7 @@ class AdminGuestController extends Controller
 
         $writer->close();
 
-        return response()->download($tempPath, 'daftar-tamu-bps-'.now()->format('Ymd-His').'.xlsx')
+        return response()->download($tempPath, 'daftar-tamu-bps-' . now()->format('Ymd-His') . '.xlsx')
             ->deleteFileAfterSend(true);
     }
 
@@ -158,15 +168,15 @@ class AdminGuestController extends Controller
     private function filteredEntries(array $filters)
     {
         return VisitorEntry::query()
-            ->when($filters['service'] ?? null, fn ($query, string $service) => $query->where('service_code', $service))
-            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('service_status', $status))
+            ->when($filters['service'] ?? null, fn($query, string $service) => $query->where('service_code', $service))
+            ->when($filters['status'] ?? null, fn($query, string $status) => $query->where('service_status', $status))
             ->when($filters['q'] ?? null, function ($query, string $search): void {
                 $query->where(function ($nested) use ($search): void {
-                    $nested->where('queue_no', 'like', '%'.$search.'%')
-                        ->orWhere('full_name', 'like', '%'.$search.'%')
-                        ->orWhere('institution', 'like', '%'.$search.'%')
-                        ->orWhere('purpose_other', 'like', '%'.$search.'%')
-                        ->orWhere('purpose', 'like', '%'.$search.'%');
+                    $nested->where('queue_no', 'like', '%' . $search . '%')
+                        ->orWhere('full_name', 'like', '%' . $search . '%')
+                        ->orWhere('institution', 'like', '%' . $search . '%')
+                        ->orWhere('purpose_other', 'like', '%' . $search . '%')
+                        ->orWhere('purpose', 'like', '%' . $search . '%');
                 });
             });
     }

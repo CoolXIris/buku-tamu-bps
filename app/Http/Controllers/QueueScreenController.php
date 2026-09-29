@@ -34,11 +34,11 @@ class QueueScreenController extends Controller
         $serving = $activeEntries->where('service_status', 'serving')
             ->sortByDesc('updated_at')
             ->values()
-            ->map(fn (VisitorEntry $entry): array => $this->formatEntry($entry));
+            ->map(fn(VisitorEntry $entry): array => $this->formatEntry($entry));
 
         $waiting = $activeEntries->where('service_status', 'waiting')
             ->values()
-            ->map(fn (VisitorEntry $entry): array => $this->formatEntry($entry));
+            ->map(fn(VisitorEntry $entry): array => $this->formatEntry($entry));
 
         $services = collect(self::SERVICES)->map(function (array $service, string $code) use ($waiting, $serving): array {
             $serviceWaiting = $waiting->where('service_code', $code)->values();

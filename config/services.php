@@ -42,7 +42,7 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
         'admin_emails' => array_values(array_filter(array_map(
-            static fn (string $email): string => strtolower(trim($email)),
+            static fn(string $email): string => strtolower(trim($email)),
             explode(',', (string) env('GOOGLE_ADMIN_EMAILS', '')),
         ))),
     ],

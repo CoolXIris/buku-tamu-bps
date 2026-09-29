@@ -82,7 +82,7 @@ class AdminDashboardTest extends TestCase
             'gender' => 'Perempuan',
             'institution' => 'Instansi Uji',
             'phone' => '081234567890',
-            'email' => uniqid('tamu', true).'@example.test',
+            'email' => uniqid('tamu', true) . '@example.test',
             'occupation' => 'PELAJAR',
             'purpose' => 'PST',
             'service_status' => 'waiting',

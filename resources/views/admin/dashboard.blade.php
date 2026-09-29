@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body class="admin-dashboard-page">
     <header class="admin-topbar">
         <a class="admin-brand" href="{{ route('admin.dashboard') }}">
@@ -58,7 +60,10 @@
 
         <section class="chart-panel" aria-labelledby="visits-chart-title">
             <div class="panel-heading chart-heading">
-                <div><span class="panel-kicker">AKTIVITAS MINGGUAN</span><h2 id="visits-chart-title">Jumlah pengunjung</h2><p>Catatan kunjungan selama tujuh hari terakhir</p></div>
+                <div><span class="panel-kicker">AKTIVITAS MINGGUAN</span>
+                    <h2 id="visits-chart-title">Jumlah pengunjung</h2>
+                    <p>Catatan kunjungan selama tujuh hari terakhir</p>
+                </div>
                 <span class="chart-legend"><i></i> Pengunjung</span>
             </div>
             <div class="chart-wrap"><canvas data-visits-chart aria-label="Grafik jumlah pengunjung selama tujuh hari terakhir" role="img"></canvas></div>
@@ -66,23 +71,31 @@
 
         <div class="distribution-grid">
             <section class="distribution-panel" aria-labelledby="service-distribution-title">
-                <div class="panel-heading distribution-heading"><div><span class="panel-kicker">LAYANAN HARI INI</span><h2 id="service-distribution-title">Distribusi pengunjung</h2></div><span class="panel-total">{{ $todayTotal }} <small>tamu</small></span></div>
+                <div class="panel-heading distribution-heading">
+                    <div><span class="panel-kicker">LAYANAN HARI INI</span>
+                        <h2 id="service-distribution-title">Distribusi pengunjung</h2>
+                    </div><span class="panel-total">{{ $todayTotal }} <small>tamu</small></span>
+                </div>
                 <div class="service-distribution-list">
                     @foreach ($services as $service)
-                        <div class="service-stat-row">
-                            <div class="service-stat-copy"><strong>{{ $service['name'] }}</strong><small>{{ $service['detail'] }}</small></div>
-                            <div class="service-stat-meta"><strong>{{ $service['count'] }}</strong><small>{{ $service['percentage'] }}%</small></div>
-                            <div class="stat-track"><span class="stat-fill stat-fill--{{ $service['color'] }}" style="width: {{ $service['percentage'] }}%"></span></div>
-                        </div>
+                    <div class="service-stat-row">
+                        <div class="service-stat-copy"><strong>{{ $service['name'] }}</strong><small>{{ $service['detail'] }}</small></div>
+                        <div class="service-stat-meta"><strong>{{ $service['count'] }}</strong><small>{{ $service['percentage'] }}%</small></div>
+                        <div class="stat-track"><span class="stat-fill stat-fill--{{ $service['color'] }}" style="width: {{ $service['percentage'] }}%"></span></div>
+                    </div>
                     @endforeach
                 </div>
             </section>
 
             <section class="distribution-panel" aria-labelledby="occupation-distribution-title">
-                <div class="panel-heading distribution-heading"><div><span class="panel-kicker">PROFIL PENGUNJUNG</span><h2 id="occupation-distribution-title">Asal kategori pengunjung</h2></div><span class="category-symbol" aria-hidden="true">⌂</span></div>
+                <div class="panel-heading distribution-heading">
+                    <div><span class="panel-kicker">PROFIL PENGUNJUNG</span>
+                        <h2 id="occupation-distribution-title">Asal kategori pengunjung</h2>
+                    </div><span class="category-symbol" aria-hidden="true">⌂</span>
+                </div>
                 <div class="occupation-distribution-list">
                     @foreach ($occupations as $occupation)
-                        <div class="occupation-stat-row"><span class="occupation-icon" aria-hidden="true">⌂</span><span class="occupation-name">{{ $occupation['name'] }}</span><span class="occupation-track"><i style="width: {{ $occupation['percentage'] }}%"></i></span><strong>{{ $occupation['count'] }}</strong></div>
+                    <div class="occupation-stat-row"><span class="occupation-icon" aria-hidden="true">⌂</span><span class="occupation-name">{{ $occupation['name'] }}</span><span class="occupation-track"><i style="width: {{ $occupation['percentage'] }}%"></i></span><strong>{{ $occupation['count'] }}</strong></div>
                     @endforeach
                 </div>
             </section>
@@ -96,4 +109,5 @@
         };
     </script>
 </body>
+
 </html>
