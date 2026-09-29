@@ -15,7 +15,7 @@
 <body class="admin-login-page">
     <header class="admin-login-topbar">
         <a class="admin-brand" href="{{ route('guests.index') }}" aria-label="Ke halaman tamu">
-            <span class="admin-bps-mark" aria-hidden="true"><i></i><b></b><em></em></span>
+            <img class="admin-bps-logo" src="{{ asset('images/logo_bps.svg') }}" alt="">
             <span><strong>Buku Tamu BPS Provinsi Sumsel</strong><small>Badan Pusat Statistik · Sumatera Selatan</small></span>
         </a>
         <a class="back-to-guest" href="{{ route('guests.index') }}">Halaman tamu <span aria-hidden="true">↗</span></a>

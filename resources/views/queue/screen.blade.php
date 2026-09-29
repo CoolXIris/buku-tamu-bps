@@ -16,7 +16,7 @@
     <main class="queue-frame">
         <header class="queue-header">
             <div class="queue-brand-lockup">
-                <span class="queue-bps-seal" aria-hidden="true"><i></i><b></b><em></em></span>
+                <img class="queue-bps-logo" src="{{ asset('images/logo_bps.svg') }}" alt="">
                 <div>
                     <h1>LAYAR ANTREAN PELAYANAN TERPADU</h1>
                     <p>Badan Pusat Statistik Provinsi Sumatera Selatan</p>
