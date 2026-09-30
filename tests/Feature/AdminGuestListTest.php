@@ -199,17 +199,64 @@ class AdminGuestListTest extends TestCase
         $this->patchJson(route('admin.guests.status', $entry), [
             'service_status' => 'serving',
             'call_announcement' => true,
+            'counter_number' => 3,
         ])
             ->assertOk()
             ->assertJsonPath('service_status', 'serving')
-            ->assertJsonPath('status_label', 'Dilayani');
+            ->assertJsonPath('status_label', 'Dilayani di loket ke-3')
+            ->assertJsonPath('counter_number', 3)
+            ->assertJsonPath('busy_counters.3', $entry->id);
 
         $this->assertDatabaseHas('visitor_entries', ['id' => $entry->id, 'service_status' => 'serving']);
-        $this->assertDatabaseHas('queue_calls', ['visitor_entry_id' => $entry->id]);
+        $this->assertDatabaseHas('queue_calls', ['visitor_entry_id' => $entry->id, 'counter_number' => 3]);
 
         $this->patchJson(route('admin.guests.status', $entry), ['service_status' => 'invalid'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('service_status');
+
+        $this->patchJson(route('admin.guests.status', $entry), [
+            'service_status' => 'serving',
+            'call_announcement' => true,
+            'counter_number' => 7,
+        ])->assertUnprocessable()->assertJsonValidationErrors('counter_number');
+    }
+
+    public function test_a_busy_counter_cannot_be_assigned_twice_and_is_freed_after_completion(): void
+    {
+        $admin = User::factory()->create();
+        $firstEntry = VisitorEntry::create($this->visitorData());
+        $secondEntry = VisitorEntry::create($this->visitorData([
+            'queue_no' => 'PST0002',
+            'queue_number' => 2,
+            'full_name' => 'Budi',
+        ]));
+        $this->actingAs($admin);
+
+        $this->patchJson(route('admin.guests.status', $firstEntry), [
+            'service_status' => 'serving',
+            'call_announcement' => true,
+            'counter_number' => 3,
+        ])->assertOk();
+
+        $this->get(route('admin.guests.index'))
+            ->assertOk()
+            ->assertSee('Loket 3 (Sibuk)');
+
+        $this->patchJson(route('admin.guests.status', $secondEntry), [
+            'service_status' => 'serving',
+            'call_announcement' => true,
+            'counter_number' => 3,
+        ])->assertUnprocessable()->assertJsonValidationErrors('counter_number');
+
+        $this->patchJson(route('admin.guests.status', $firstEntry), [
+            'service_status' => 'completed',
+        ])->assertOk()->assertJsonPath('busy_counters', []);
+
+        $this->patchJson(route('admin.guests.status', $secondEntry), [
+            'service_status' => 'serving',
+            'call_announcement' => true,
+            'counter_number' => 3,
+        ])->assertOk()->assertJsonPath('busy_counters.3', $secondEntry->id);
     }
 
     public function test_public_queue_screen_shows_waiting_and_called_visitors_without_admin_login(): void
@@ -222,7 +269,7 @@ class AdminGuestListTest extends TestCase
             'full_name' => 'Budi Dipanggil',
             'service_status' => 'serving',
         ]));
-        QueueCall::create(['visitor_entry_id' => $serving->id]);
+        QueueCall::create(['visitor_entry_id' => $serving->id, 'counter_number' => 4]);
 
         $this->get(route('queue.screen'))
             ->assertOk()
@@ -234,6 +281,9 @@ class AdminGuestListTest extends TestCase
             ->assertJsonPath('serving.0.queue_no', $serving->queue_no)
             ->assertJsonPath('latest_call.queue_no', $serving->queue_no)
             ->assertJsonPath('latest_call.event_id', 1)
+            ->assertJsonPath('latest_call.counter_number', 4)
+            ->assertJsonPath('counters.3.number', 4)
+            ->assertJsonPath('counters.3.serving.queue_no', $serving->queue_no)
             ->assertJsonPath('services.2.serving.queue_no', $serving->queue_no);
     }
 

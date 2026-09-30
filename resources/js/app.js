@@ -5,6 +5,8 @@ const modal = document.querySelector('[data-guest-modal]');
 const purposeInput = document.querySelector('[data-purpose-input]');
 const purposeOther = document.querySelector('[data-purpose-other]');
 const purposeOtherInput = document.querySelector('[data-purpose-other-input]');
+const dtsenUpdateWrap = document.querySelector('[data-dtsen-update]');
+const dtsenUpdateInput = document.querySelector('[data-dtsen-update-input]');
 const occupationSelect = document.querySelector('[data-occupation]');
 const occupationOther = document.querySelector('[data-occupation-other]');
 const occupationOtherInput = document.querySelector('[data-occupation-other-input]');
@@ -23,6 +25,8 @@ function updatePurpose(purpose) {
 	const showOther = purpose === 'KEGIATAN';
 	purposeOther?.classList.toggle('hidden', !showOther);
 	if (purposeOtherInput) purposeOtherInput.required = showOther;
+	dtsenUpdateWrap?.classList.toggle('hidden', purpose !== 'PST');
+	if (purpose !== 'PST' && dtsenUpdateInput) dtsenUpdateInput.checked = false;
 }
 
 function openModal(purpose = purposeInput?.value ?? 'PST') {
@@ -134,7 +138,12 @@ guestFilterForm?.querySelectorAll('select').forEach((select) => {
 });
 
 const detailModal = document.querySelector('[data-guest-detail-modal]');
+const callCounterModal = document.querySelector('[data-call-counter-modal]');
+const callCounterForm = document.querySelector('[data-counter-form]');
+const callCounterSelect = document.querySelector('[data-counter-select]');
 const toast = document.querySelector('[data-admin-toast]');
+let pendingCallRow = null;
+let busyCounterAssignments = callCounterSelect ? JSON.parse(callCounterSelect.dataset.counterOccupants ?? '{}') : {};
 let toastTimer;
 
 function showAdminToast(message, isError = false) {
@@ -145,6 +154,67 @@ function showAdminToast(message, isError = false) {
 	window.clearTimeout(toastTimer);
 	toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 3200);
 }
+
+function openCallCounterModal(row) {
+	if (!callCounterModal || !callCounterSelect) return;
+	pendingCallRow = row;
+	refreshCounterOptions();
+	callCounterModal.querySelector('[data-counter-queue]').textContent = `Nomor antrean ${row.dataset.queueNo}`;
+	callCounterModal.classList.remove('hidden');
+	callCounterModal.setAttribute('aria-hidden', 'false');
+	document.body.style.overflow = 'hidden';
+	callCounterSelect.focus();
+}
+
+function closeCallCounterModal() {
+	if (!callCounterModal) return;
+	callCounterModal.classList.add('hidden');
+	callCounterModal.setAttribute('aria-hidden', 'true');
+	document.body.style.overflow = '';
+	pendingCallRow = null;
+	refreshCounterOptions();
+}
+
+function refreshCounterOptions() {
+	if (!callCounterSelect) return;
+	const currentEntryId = Number(pendingCallRow?.dataset.entryId ?? 0);
+	for (const option of callCounterSelect.options) {
+		if (!option.value) {
+			option.disabled = true;
+			continue;
+		}
+		const occupantId = Number(busyCounterAssignments[option.value] ?? 0);
+		const isBusy = occupantId !== 0 && occupantId !== currentEntryId;
+		option.disabled = isBusy;
+		option.textContent = `Loket ${option.value}${isBusy ? ' (Sibuk)' : ''}`;
+	}
+	if (callCounterSelect.selectedOptions[0]?.disabled) {
+		const firstAvailable = [...callCounterSelect.options].find((option) => !option.disabled);
+		if (firstAvailable) callCounterSelect.value = firstAvailable.value;
+	}
+}
+
+document.querySelectorAll('[data-close-counter-modal]').forEach((button) => {
+	button.addEventListener('click', closeCallCounterModal);
+});
+callCounterModal?.addEventListener('click', (event) => {
+	if (event.target === callCounterModal) closeCallCounterModal();
+});
+callCounterForm?.addEventListener('submit', async (event) => {
+	event.preventDefault();
+	const row = pendingCallRow;
+	const submitButton = callCounterForm.querySelector('[type="submit"]');
+	if (!row || !callCounterSelect || !submitButton) return;
+	submitButton.disabled = true;
+	try {
+		await updateGuestStatus(row, 'serving', true, Number(callCounterSelect.value));
+		closeCallCounterModal();
+	} catch (error) {
+		showAdminToast(error.message, true);
+	} finally {
+		submitButton.disabled = false;
+	}
+});
 
 function setRowStatus(row, status, label) {
 	const select = row.querySelector('[data-status-select]');
@@ -176,7 +246,7 @@ function setRowStatus(row, status, label) {
 	}
 }
 
-async function updateGuestStatus(row, status, announce = false) {
+async function updateGuestStatus(row, status, announce = false, counterNumber = null) {
 	const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
 	const response = await fetch(row.dataset.statusUrl, {
 		method: 'PATCH',
@@ -184,15 +254,23 @@ async function updateGuestStatus(row, status, announce = false) {
 		body: JSON.stringify({
 			service_status: status,
 			...(announce ? { call_announcement: true } : {}),
+			...(counterNumber ? { counter_number: counterNumber } : {}),
 		}),
 	});
 	const result = await response.json();
-	if (!response.ok) throw new Error(result.message ?? 'Status tidak dapat diperbarui.');
+	if (!response.ok) {
+		const validationMessage = Object.values(result.errors ?? {}).flat()[0];
+		throw new Error(validationMessage ?? result.message ?? 'Status tidak dapat diperbarui.');
+	}
+	if (result.busy_counters) {
+		busyCounterAssignments = result.busy_counters;
+		refreshCounterOptions();
+	}
 	setRowStatus(row, result.service_status, result.status_label);
 	showAdminToast(result.message);
 	if (announce && 'speechSynthesis' in window) {
 		window.speechSynthesis.cancel();
-		const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${result.queue_no.replace(/([A-Z]+)(\d+)/, '$1 $2')}, silakan menuju meja pelayanan.`);
+		const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${result.queue_no.replace(/([A-Z]+)(\d+)/, '$1 $2')}, silakan menuju loket ${result.counter_number}.`);
 		announcement.lang = 'id-ID';
 		window.speechSynthesis.speak(announcement);
 	}
@@ -217,14 +295,8 @@ document.addEventListener('click', async (event) => {
 	const callButton = event.target.closest('[data-call-guest]');
 	if (callButton) {
 		const row = callButton.closest('[data-guest-row]');
-		callButton.disabled = true;
-		try {
-			await updateGuestStatus(row, 'serving', true);
-		} catch (error) {
-			showAdminToast(error.message, true);
-		} finally {
-			callButton.disabled = false;
-		}
+		openCallCounterModal(row);
+		return;
 	}
 
 	const detailButton = event.target.closest('[data-open-detail]');
@@ -239,6 +311,7 @@ document.addEventListener('click', async (event) => {
 			detailModal.querySelectorAll('[data-detail]').forEach((field) => {
 				field.textContent = guest[field.dataset.detail] || '—';
 			});
+			detailModal.querySelector('[data-detail-dtsen-wrap]').classList.toggle('hidden', guest.service_code !== 'PST');
 			detailModal.querySelector('[data-detail-other-wrap]').classList.toggle('hidden', !guest.purpose_other);
 			detailModal.querySelector('[data-detail-occupation-wrap]').classList.toggle('hidden', !guest.occupation_other);
 			detailModal.classList.remove('hidden');
@@ -261,7 +334,7 @@ document.addEventListener('click', async (event) => {
 
 const queueScreen = document.querySelector('[data-queue-screen]');
 if (queueScreen) {
-	const serviceList = queueScreen.querySelector('[data-service-list]');
+	const counterList = queueScreen.querySelector('[data-counter-list]');
 	const waitingList = queueScreen.querySelector('[data-waiting-list]');
 	const currentCall = queueScreen.querySelector('[data-current-call]');
 	const soundButton = queueScreen.querySelector('[data-queue-sound]');
@@ -303,27 +376,27 @@ if (queueScreen) {
 			makeText('span', 'current-queue-number', formatQueueNumber(call.queue_no)),
 			makeText('h2', '', call.full_name),
 			makeText('p', 'current-call-institution', call.institution),
-			makeText('span', 'current-service-label', `Loket: ${call.service_label} · ${call.service_name}`),
+			makeText('span', 'current-service-label', call.counter_number ? `LOKET ${call.counter_number}` : 'LOKET BELUM DITENTUKAN'),
 		);
 		queueScreen.querySelector('[data-called-time]').textContent = `DIPANGGIL ${call.called_at ?? ''}`;
 	}
 
-	function renderServices(services) {
-		serviceList.replaceChildren();
-		services.forEach((service) => {
+	function renderCounters(counters) {
+		counterList.replaceChildren();
+		counters.forEach((counter) => {
 			const card = document.createElement('article');
-			card.className = `queue-service-card queue-service-card--${service.code.toLowerCase()}`;
-			card.append(makeText('span', 'queue-service-code', service.code === 'KEGIATAN' ? 'LAIN' : service.label));
+			card.className = 'queue-service-card queue-service-card--counter';
+			card.append(makeText('span', 'queue-service-code', String(counter.number)));
 			const description = document.createElement('div');
-			description.append(makeText('strong', '', service.code === 'KEGIATAN' ? 'KEGIATAN LAINNYA' : service.label));
-			description.append(makeText('small', '', service.name.toUpperCase()));
+			description.append(makeText('strong', '', `LOKET ${counter.number}`));
+			description.append(makeText('small', '', counter.serving ? 'SEDANG MELAYANI' : 'TERSEDIA'));
 			card.append(description);
 			const queueInfo = document.createElement('span');
 			queueInfo.className = 'queue-service-next';
-			queueInfo.append(makeText('strong', '', service.serving ? formatQueueNumber(service.serving.queue_no) : '—'));
-			queueInfo.append(makeText('small', '', `${service.waiting_count} menunggu`));
+			queueInfo.append(makeText('strong', '', counter.serving ? formatQueueNumber(counter.serving.queue_no) : '—'));
+			queueInfo.append(makeText('small', '', counter.serving?.service_label ?? 'Kosong'));
 			card.append(queueInfo);
-			serviceList.append(card);
+			counterList.append(card);
 		});
 	}
 
@@ -361,7 +434,7 @@ if (queueScreen) {
 		});
 		if ('speechSynthesis' in window) {
 			window.speechSynthesis.cancel();
-			const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${call.queue_no.replace(/([A-Z]+)(\d+)/, '$1 $2')}, silakan menuju loket ${call.service_label}.`);
+			const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${call.queue_no.replace(/([A-Z]+)(\d+)/, '$1 $2')}, silakan menuju loket ${call.counter_number}.`);
 			announcement.lang = 'id-ID';
 			window.speechSynthesis.speak(announcement);
 		}
@@ -391,11 +464,11 @@ if (queueScreen) {
 			queueScreen.querySelector('[data-live-indicator]').classList.add('is-online');
 			queueScreen.querySelector('[data-live-label]').textContent = `TERHUBUNG · ${data.updated_at} WIB`;
 			renderCurrentCall(data.latest_call);
-			renderServices(data.services);
+			renderCounters(data.counters ?? []);
 			renderWaiting(data.waiting);
 			if (data.latest_call?.service_status === 'serving' && !initialLoad && data.latest_call.event_id !== lastCallEventId) {
 				playCallSound(data.latest_call);
-				queueScreen.querySelector('[data-announcement]').textContent = `Nomor antrean ${formatQueueNumber(data.latest_call.queue_no)}, silakan menuju loket ${data.latest_call.service_label}.`;
+				queueScreen.querySelector('[data-announcement]').textContent = `Nomor antrean ${formatQueueNumber(data.latest_call.queue_no)}, silakan menuju loket ${data.latest_call.counter_number}.`;
 			}
 			lastCallEventId = data.latest_call?.event_id ?? null;
 			initialLoad = false;
@@ -414,6 +487,9 @@ if (queueScreen) {
 }
 
 document.addEventListener('keydown', (event) => {
+	if (event.key === 'Escape' && callCounterModal && !callCounterModal.classList.contains('hidden')) {
+		closeCallCounterModal();
+	}
 	if (event.key === 'Escape' && detailModal && !detailModal.classList.contains('hidden')) {
 		detailModal.classList.add('hidden');
 		detailModal.setAttribute('aria-hidden', 'true');

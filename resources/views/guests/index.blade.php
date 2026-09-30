@@ -169,6 +169,10 @@
                         @error('purpose')<small class="field-error">{{ $message }}</small>@enderror
                     </div>
                 </div>
+                <label class="dtsen-checkbox conditional-field {{ old('purpose', request('purpose', 'PST')) === 'PST' ? '' : 'hidden' }}" data-dtsen-update>
+                    <input type="checkbox" name="dtsen_update" value="1" data-dtsen-update-input @checked(old('dtsen_update'))>
+                    <span>Pengurusan update DTSEN</span>
+                </label>
                 <label class="field field--wide conditional-field {{ old('purpose', request('purpose', 'PST')) === 'KEGIATAN' ? '' : 'hidden' }}" data-purpose-other>Nama kegiatan
                     <input name="purpose_other" value="{{ old('purpose_other') }}" data-purpose-other-input placeholder="Tuliskan nama kegiatan" maxlength="150">
                     @error('purpose_other')<small class="field-error">{{ $message }}</small>@enderror

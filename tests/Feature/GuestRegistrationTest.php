@@ -24,6 +24,7 @@ class GuestRegistrationTest extends TestCase
             'full_name' => 'Siti Aminah',
             'service_code' => 'PST',
             'queue_no' => 'PST0001',
+            'dtsen_update' => false,
         ]);
 
         $this->post(route('guests.store'), $this->guestData(['purpose' => 'PST']))
@@ -41,6 +42,32 @@ class GuestRegistrationTest extends TestCase
         $this->assertDatabaseHas('visitor_entries', [
             'service_code' => 'KEGIATAN',
             'queue_no' => 'UMUM0001',
+        ]);
+    }
+
+    public function test_dtsen_update_is_saved_only_for_pst_and_defaults_to_unchecked(): void
+    {
+        $this->post(route('guests.store'), $this->guestData([
+            'full_name' => 'Dewi',
+            'email' => 'dewi@example.test',
+            'dtsen_update' => '1',
+        ]))->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
+
+        $this->assertDatabaseHas('visitor_entries', [
+            'full_name' => 'Dewi',
+            'dtsen_update' => true,
+        ]);
+
+        $this->post(route('guests.store'), $this->guestData([
+            'purpose' => 'LPSE',
+            'full_name' => 'Rina',
+            'email' => 'rina@example.test',
+            'dtsen_update' => '1',
+        ]))->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
+
+        $this->assertDatabaseHas('visitor_entries', [
+            'full_name' => 'Rina',
+            'dtsen_update' => false,
         ]);
     }
 
@@ -89,7 +116,7 @@ class GuestRegistrationTest extends TestCase
         QueueCounter::query()->create([
             'service_code' => 'LPSE',
             'service_date' => now()->toDateString(),
-            'last_number' => 2,
+            'last_number' => 0,
         ]);
 
         $this->post(route('guests.store'), $this->guestData([

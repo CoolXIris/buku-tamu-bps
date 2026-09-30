@@ -93,9 +93,12 @@
                         @php
                         $serviceName = ['PST' => 'PST', 'PPID' => 'PPID', 'LPSE' => 'LPSE', 'KEGIATAN' => 'UMUM'][$entry->service_code] ?? $entry->service_code;
                         $purposeName = ['PST' => 'Pelayanan Statistik Terpadu', 'PPID' => 'Informasi dan Dokumentasi', 'LPSE' => 'Pengadaan Secara Elektronik', 'KEGIATAN' => 'Kegiatan lainnya'][$entry->purpose] ?? $entry->purpose;
-                        $statusName = $statuses[$entry->service_status] ?? $entry->service_status;
+                        $statusName = $entry->service_status === 'serving' && $entry->latestCall?->counter_number
+                            ? 'Dilayani di loket ke-' . $entry->latestCall->counter_number
+                            : ($statuses[$entry->service_status] ?? $entry->service_status);
+                        $localCreatedAt = $entry->created_at->copy()->setTimezone('Asia/Jakarta');
                         @endphp
-                        <tr data-guest-row data-status-url="{{ route('admin.guests.status', $entry) }}" data-detail-url="{{ route('admin.guests.show', $entry) }}" data-queue-no="{{ $entry->queue_no }}">
+                        <tr data-guest-row data-entry-id="{{ $entry->id }}" data-status-url="{{ route('admin.guests.status', $entry) }}" data-detail-url="{{ route('admin.guests.show', $entry) }}" data-queue-no="{{ $entry->queue_no }}">
                             <td><span class="queue-pill">{{ $entry->queue_no }}</span></td>
                             <td>
                                 <div class="guest-name-cell"><strong>{{ $entry->full_name }}</strong><span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -165,6 +168,7 @@
                 <div><span>Nama lengkap</span><strong data-detail="full_name"></strong></div>
                 <div><span>Asal instansi</span><strong data-detail="institution"></strong></div>
                 <div><span>Keperluan</span><strong data-detail="purpose"></strong></div>
+                <div class="hidden" data-detail-dtsen-wrap><span>Pengurusan update DTSEN</span><strong data-detail="dtsen_update"></strong></div>
                 <div class="hidden" data-detail-other-wrap><span>Detail keperluan</span><strong data-detail="purpose_other"></strong></div>
                 <div><span>Jenis kelamin</span><strong data-detail="gender"></strong></div>
                 <div><span>Pekerjaan</span><strong data-detail="occupation"></strong></div>
@@ -175,6 +179,32 @@
                 <div><span>Status pelayanan</span><strong data-detail="status"></strong></div>
             </div>
             <div class="detail-footer"><button type="button" data-close-detail>Tutup</button></div>
+        </section>
+    </div>
+    <div class="guest-detail-backdrop hidden" data-call-counter-modal aria-hidden="true">
+        <section class="guest-detail-modal counter-picker-modal" role="dialog" aria-modal="true" aria-labelledby="counter-picker-title">
+            <button class="detail-close" type="button" data-close-counter-modal aria-label="Tutup pilihan loket">×</button>
+            <div class="detail-heading"><span>PEMANGGILAN ANTREAN</span>
+                <h2 id="counter-picker-title">Pilih loket</h2>
+                <p data-counter-queue></p>
+            </div>
+            <form data-counter-form>
+                <label class="field counter-picker-field">Loket pelayanan
+                    <select name="counter_number" data-counter-select data-counter-occupants="{{ json_encode($counterOccupants) }}" required>
+                        <option value="" selected disabled>Pilih loket tersedia</option>
+                        @for ($counter = 1; $counter <= 6; $counter++)
+                        @php($occupantId = $counterOccupants[$counter] ?? null)
+                        <option value="{{ $counter }}" @disabled($occupantId)>
+                            Loket {{ $counter }}{{ $occupantId ? ' (Sibuk)' : '' }}
+                        </option>
+                        @endfor
+                    </select>
+                </label>
+                <div class="detail-footer">
+                    <button type="button" data-close-counter-modal>Batal</button>
+                    <button type="submit" class="counter-confirm-button">Panggil ke loket</button>
+                </div>
+            </form>
         </section>
     </div>
     <div class="admin-toast" data-admin-toast role="status" aria-live="polite"></div>

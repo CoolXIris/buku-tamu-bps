@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\GuestSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -29,6 +30,7 @@ class VisitorEntry extends Model
         'occupation_other',
         'purpose',
         'purpose_other',
+        'dtsen_update',
         'service_status',
     ];
 
@@ -68,5 +70,14 @@ class VisitorEntry extends Model
                 }
             });
         });
+    }
+
+    protected $casts = [
+        'dtsen_update' => 'boolean',
+    ];
+
+    public function latestCall(): HasOne
+    {
+        return $this->hasOne(QueueCall::class)->latestOfMany('id');
     }
 }

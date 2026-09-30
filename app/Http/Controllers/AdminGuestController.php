@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\QueueCall;
+use App\Models\ServiceCounter;
 use App\Models\VisitorEntry;
 use App\Services\GuestSearch;
 use Illuminate\Contracts\View\View;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -49,7 +51,17 @@ class AdminGuestController extends Controller
     public function index(Request $request): View
     {
         $filters = $this->validatedFilters($request);
-        $entries = app(GuestSearch::class)->paginate($filters, $request->integer('page', 1))->withQueryString();
+        $entries = app(GuestSearch::class)
+            ->paginate($filters, $request->integer('page', 1))
+            ->withQueryString();
+        $entriesById = VisitorEntry::query()
+            ->with('latestCall')
+            ->whereKey($entries->getCollection()->pluck('id'))
+            ->get()
+            ->keyBy('id');
+        $entries->setCollection($entries->getCollection()->map(
+            fn (VisitorEntry $entry): VisitorEntry => $entriesById->get($entry->id, $entry),
+        ));
 
         return view('admin.guests.index', [
             'entries' => $entries,
@@ -57,12 +69,16 @@ class AdminGuestController extends Controller
             'services' => self::SERVICES,
             'statuses' => self::STATUSES,
             'totalVisitors' => VisitorEntry::count(),
+            'counterOccupants' => ServiceCounter::query()->pluck('visitor_entry_id', 'number')->all(),
+            'activeVisitorCount' => VisitorEntry::query()->inProgress()->count(),
             'admin' => Auth::user(),
         ]);
     }
 
     public function show(VisitorEntry $visitorEntry): JsonResponse
     {
+        $counterNumber = $visitorEntry->latestCall?->counter_number;
+
         return response()->json([
             'queue_no' => $visitorEntry->queue_no,
             'created_at' => $visitorEntry->created_at?->format('d/m/Y H:i'),
@@ -70,12 +86,17 @@ class AdminGuestController extends Controller
             'institution' => $visitorEntry->institution,
             'purpose' => self::PURPOSES[$visitorEntry->purpose] ?? self::PURPOSES[$visitorEntry->service_code] ?? $visitorEntry->purpose,
             'purpose_other' => $visitorEntry->purpose_other,
+            'service_code' => $visitorEntry->service_code,
+            'dtsen_update' => $visitorEntry->dtsen_update ? 'Ya' : 'Tidak',
             'gender' => $visitorEntry->gender,
             'phone' => $visitorEntry->phone,
             'email' => $visitorEntry->email,
             'occupation' => self::OCCUPATIONS[$visitorEntry->occupation] ?? $visitorEntry->occupation,
             'occupation_other' => $visitorEntry->occupation_other,
-            'status' => self::STATUSES[$visitorEntry->service_status] ?? $visitorEntry->service_status,
+            'status' => $visitorEntry->service_status === 'serving' && $counterNumber
+                ? "Dilayani di loket ke-{$counterNumber}"
+                : (self::STATUSES[$visitorEntry->service_status] ?? $visitorEntry->service_status),
+            'counter_number' => $counterNumber,
         ]);
     }
 
@@ -84,23 +105,67 @@ class AdminGuestController extends Controller
         $validated = $request->validate([
             'service_status' => ['required', 'in:waiting,serving,completed'],
             'call_announcement' => ['sometimes', 'boolean', 'prohibited_unless:service_status,serving'],
+            'counter_number' => ['required_if:call_announcement,true', 'nullable', 'integer', 'between:1,6', 'prohibited_unless:call_announcement,true'],
         ]);
 
         $callEvent = DB::transaction(function () use ($visitorEntry, $validated): ?QueueCall {
-            $visitorEntry->update(['service_status' => $validated['service_status']]);
+            $counters = ServiceCounter::query()
+                ->orderBy('number')
+                ->lockForUpdate()
+                ->get();
+            $entry = VisitorEntry::query()
+                ->whereKey($visitorEntry->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($validated['call_announcement'] ?? false) {
+                $counter = $counters->firstWhere('number', (int) $validated['counter_number']);
+                $occupantId = (int) ($counter->visitor_entry_id ?? 0);
+
+                if ($occupantId && $occupantId !== $entry->id) {
+                    throw ValidationException::withMessages([
+                        'counter_number' => "Loket {$counter->number} sedang sibuk. Silakan pilih loket lain.",
+                    ]);
+                }
+
+                foreach ($counters as $assignedCounter) {
+                    if ((int) $assignedCounter->visitor_entry_id === $entry->id && $assignedCounter->number !== $counter->number) {
+                        $assignedCounter->update(['visitor_entry_id' => null]);
+                    }
+                }
+
+                $counter->update(['visitor_entry_id' => $entry->id]);
+            } elseif ($validated['service_status'] !== 'serving') {
+                foreach ($counters as $assignedCounter) {
+                    if ((int) $assignedCounter->visitor_entry_id === $entry->id) {
+                        $assignedCounter->update(['visitor_entry_id' => null]);
+                    }
+                }
+            }
+
+            $entry->update(['service_status' => $validated['service_status']]);
 
             return ($validated['call_announcement'] ?? false)
-                ? QueueCall::create(['visitor_entry_id' => $visitorEntry->id])
+                ? QueueCall::create([
+                    'visitor_entry_id' => $entry->id,
+                    'counter_number' => $validated['counter_number'],
+                ])
                 : null;
         });
 
+        $statusLabel = $callEvent
+            ? "Dilayani di loket ke-{$callEvent->counter_number}"
+            : self::STATUSES[$visitorEntry->service_status];
+
         return response()->json([
             'queue_no' => $visitorEntry->queue_no,
-            'service_status' => $visitorEntry->service_status,
-            'status_label' => self::STATUSES[$visitorEntry->service_status],
+            'service_status' => $validated['service_status'],
+            'status_label' => $statusLabel,
             'call_event_id' => $callEvent?->id,
+            'counter_number' => $callEvent?->counter_number,
+            'busy_counters' => ServiceCounter::query()->whereNotNull('visitor_entry_id')->pluck('visitor_entry_id', 'number')->all(),
             'message' => $callEvent
-                ? 'Memanggil nomor antrean ' . $visitorEntry->queue_no
+                ? 'Memanggil nomor antrean ' . $visitorEntry->queue_no . ' ke loket ' . $callEvent->counter_number
                 : 'Status antrean berhasil diperbarui.',
         ]);
     }

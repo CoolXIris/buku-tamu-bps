@@ -37,7 +37,9 @@ class GuestController extends Controller
             'occupation_other' => ['required_if:occupation,LAINNYA', 'nullable', 'string', 'max:100'],
             'purpose' => ['required', 'in:PST,LPSE,PPID,KEGIATAN'],
             'purpose_other' => ['required_if:purpose,KEGIATAN', 'nullable', 'string', 'max:150'],
+            'dtsen_update' => ['sometimes', 'boolean'],
         ]);
+        $validated['dtsen_update'] = $validated['purpose'] === 'PST' && $request->boolean('dtsen_update');
 
         $entry = DB::transaction(function () use ($validated): VisitorEntry {
             $serviceCode = $validated['purpose'];

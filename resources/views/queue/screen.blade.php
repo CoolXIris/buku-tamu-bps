@@ -42,24 +42,19 @@
                     <h2>Menunggu panggilan berikutnya</h2>
                     <p>Silakan menunggu, nomor antrean akan tampil di sini.</p>
                 </div>
-                <div class="current-call-footer"><span>Silakan menuju meja pelayanan saat nomor Anda dipanggil</span><strong>BPS Sumatera Selatan Melayani Dengan Sepenuh Hati</strong></div>
+                <div class="current-call-footer"><span>Silakan menuju loket yang tampil saat nomor Anda dipanggil</span><strong>BPS Sumatera Selatan Melayani Dengan Sepenuh Hati</strong></div>
             </article>
 
             <aside class="service-status-panel" aria-labelledby="service-status-heading">
-                <div class="service-status-heading"><span id="service-status-heading">STATUS LOKET PELAYANAN</span><small>4 LAYANAN</small></div>
-                <div class="queue-service-list" data-service-list>
-                    <article class="queue-service-card"><span class="queue-service-code">PST</span>
-                        <div><strong>PST</strong><small>PELAYANAN STATISTIK TERPADU</small></div><span class="queue-service-next">Memuat...</span>
+                <div class="service-status-heading"><span id="service-status-heading">STATUS LOKET PELAYANAN</span><small>6 LOKET</small></div>
+                <div class="queue-service-list" data-counter-list>
+                    @for ($counter = 1; $counter <= 6; $counter++)
+                    <article class="queue-service-card queue-service-card--counter">
+                        <span class="queue-service-code">{{ $counter }}</span>
+                        <div><strong>LOKET {{ $counter }}</strong><small>SEDANG MELAYANI</small></div>
+                        <span class="queue-service-next"><strong>Memuat...</strong><small>Antrean aktif</small></span>
                     </article>
-                    <article class="queue-service-card"><span class="queue-service-code">LPSE</span>
-                        <div><strong>LPSE</strong><small>LAYANAN PENGADAAN ELEKTRONIK</small></div><span class="queue-service-next">Memuat...</span>
-                    </article>
-                    <article class="queue-service-card"><span class="queue-service-code">PPID</span>
-                        <div><strong>PPID</strong><small>INFORMASI DAN DOKUMENTASI</small></div><span class="queue-service-next">Memuat...</span>
-                    </article>
-                    <article class="queue-service-card"><span class="queue-service-code">LAIN</span>
-                        <div><strong>KEGIATAN LAINNYA</strong><small>LAYANAN KEGIATAN KEDINASAN</small></div><span class="queue-service-next">Memuat...</span>
-                    </article>
+                    @endfor
                 </div>
             </aside>
         </section>

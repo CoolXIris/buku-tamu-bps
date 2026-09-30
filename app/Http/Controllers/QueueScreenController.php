@@ -29,6 +29,7 @@ class QueueScreenController extends Controller
             ->whereDate('created_at', $today)
             ->whereIn('service_status', ['waiting', 'serving'])
             ->orderBy('created_at')
+            ->with('latestCall')
             ->get(['id', 'queue_no', 'service_code', 'full_name', 'institution', 'service_status', 'updated_at']);
 
         $serving = $activeEntries->where('service_status', 'serving')
@@ -58,13 +59,25 @@ class QueueScreenController extends Controller
             ->whereDate('created_at', $today)
             ->latest('id')
             ->first();
+        $counters = collect(range(1, 6))->map(function (int $number) use ($serving): array {
+            $assignedEntry = $serving
+                ->where('counter_number', $number)
+                ->sortByDesc('call_event_id')
+                ->first();
+
+            return [
+                'number' => $number,
+                'serving' => $assignedEntry,
+            ];
+        })->values();
 
         return response()->json([
             'serving' => $serving,
             'waiting' => $waiting,
             'services' => $services,
+            'counters' => $counters,
             'latest_call' => $latestCall?->visitorEntry
-                ? [...$this->formatEntry($latestCall->visitorEntry), 'event_id' => $latestCall->id, 'called_at' => $latestCall->created_at->format('H:i:s')]
+                ? [...$this->formatEntry($latestCall->visitorEntry), 'event_id' => $latestCall->id, 'counter_number' => $latestCall->counter_number, 'called_at' => $latestCall->created_at->format('H:i:s')]
                 : null,
             'updated_at' => now()->timezone(config('app.timezone'))->format('H:i:s'),
         ])->header('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -84,6 +97,8 @@ class QueueScreenController extends Controller
             'institution' => $entry->institution,
             'service_status' => $entry->service_status,
             'updated_at' => $entry->updated_at?->toIso8601String(),
+            'counter_number' => $entry->service_status === 'serving' ? $entry->latestCall?->counter_number : null,
+            'call_event_id' => $entry->service_status === 'serving' ? $entry->latestCall?->id : null,
         ];
     }
 }
