@@ -159,15 +159,15 @@
                         <input name="occupation_other" value="{{ old('occupation_other') }}" data-occupation-other-input placeholder="Tuliskan pekerjaan Anda" maxlength="100">
                         @error('occupation_other')<small class="field-error">{{ $message }}</small>@enderror
                     </label>
-                    <label class="field field--wide" style="margin-bottom: 15px;">Tipe keperluan
-                        <select name="purpose" data-purpose-input required>
-                            <option value="PST" @selected(old('purpose', request('purpose', 'PST' ))==='PST' )>PST</option>
-                            <option value="LPSE" @selected(old('purpose', request('purpose'))==='LPSE' )>LPSE</option>
-                            <option value="PPID" @selected(old('purpose', request('purpose'))==='PPID' )>PPID</option>
-                            <option value="KEGIATAN" @selected(old('purpose', request('purpose'))==='KEGIATAN' )>Kegiatan lainnya</option>
-                        </select>
+                    <div class="field field--wide">
+                        Tipe keperluan
+                        <input type="hidden" name="purpose" value="{{ old('purpose', request('purpose', 'PST')) }}" data-purpose-input>
+                        <div class="selected-service">
+                            <span class="selected-service-label">Layanan dipilih</span>
+                            <strong data-purpose-label>{{ old('purpose', request('purpose', 'PST')) }}</strong>
+                        </div>
                         @error('purpose')<small class="field-error">{{ $message }}</small>@enderror
-                    </label>
+                    </div>
                 </div>
                 <label class="field field--wide conditional-field {{ old('purpose', request('purpose', 'PST')) === 'KEGIATAN' ? '' : 'hidden' }}" data-purpose-other>Nama kegiatan
                     <input name="purpose_other" value="{{ old('purpose_other') }}" data-purpose-other-input placeholder="Tuliskan nama kegiatan" maxlength="150">

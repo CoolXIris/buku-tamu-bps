@@ -8,10 +8,18 @@ const purposeOtherInput = document.querySelector('[data-purpose-other-input]');
 const occupationSelect = document.querySelector('[data-occupation]');
 const occupationOther = document.querySelector('[data-occupation-other]');
 const occupationOtherInput = document.querySelector('[data-occupation-other-input]');
+const purposeLabel = document.querySelector('[data-purpose-label]');
+const purposeLabels = {
+	PST: 'Pelayanan Statistik Terpadu (PST)',
+	LPSE: 'Layanan Pengadaan Secara Elektronik (LPSE)',
+	PPID: 'Pejabat Pengelola Informasi dan Dokumentasi (PPID)',
+	KEGIATAN: 'Kegiatan lainnya',
+};
 
 function updatePurpose(purpose) {
 	if (!purposeInput) return;
 	purposeInput.value = purpose;
+	if (purposeLabel) purposeLabel.textContent = purposeLabels[purpose] ?? purpose;
 	const showOther = purpose === 'KEGIATAN';
 	purposeOther?.classList.toggle('hidden', !showOther);
 	if (purposeOtherInput) purposeOtherInput.required = showOther;
@@ -57,7 +65,6 @@ document.querySelectorAll('[data-visitor-tab]').forEach((tab) => {
 	});
 });
 
-purposeInput?.addEventListener('change', () => updatePurpose(purposeInput.value));
 occupationSelect?.addEventListener('change', () => {
 	const showOther = occupationSelect.value === 'LAINNYA';
 	occupationOther?.classList.toggle('hidden', !showOther);
