@@ -61,7 +61,7 @@ class GuestController extends Controller
                 ->get(['queue_no', 'queue_number']);
             $existingMax = $existingEntries->max(function (VisitorEntry $entry) use ($queuePrefix): int {
                 $numberFromQueueNo = preg_match(
-                    '/^'.preg_quote($queuePrefix, '/').'(\d+)$/',
+                    '/^' . preg_quote($queuePrefix, '/') . '(\d+)$/',
                     $entry->queue_no,
                     $matches,
                 ) ? (int) $matches[1] : 0;
@@ -76,7 +76,7 @@ class GuestController extends Controller
                 ...$validated,
                 'service_code' => $serviceCode,
                 'queue_number' => $number,
-                'queue_no' => $queuePrefix.str_pad((string) $number, 4, '0', STR_PAD_LEFT),
+                'queue_no' => $queuePrefix . str_pad((string) $number, 4, '0', STR_PAD_LEFT),
             ]);
         });
 
