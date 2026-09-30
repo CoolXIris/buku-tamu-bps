@@ -16,10 +16,10 @@
     <main class="queue-frame">
         <header class="queue-header">
             <div class="queue-brand-lockup">
-                <span class="queue-bps-seal" aria-hidden="true"><i></i><b></b><em></em></span>
+                <img class="queue-bps-logo" src="{{ asset('images/logo_bps.svg') }}" alt="">
                 <div>
                     <h1>LAYAR ANTREAN PELAYANAN TERPADU</h1>
-                    <p>Badan Pusat Statistik Provinsi Sumatera Selatan</p>
+                    <p>BPS Provinsi Sumatera Selatan</p>
                 </div>
             </div>
             <div class="queue-header-tools">
@@ -42,7 +42,7 @@
                     <h2>Menunggu panggilan berikutnya</h2>
                     <p>Silakan menunggu, nomor antrean akan tampil di sini.</p>
                 </div>
-                <div class="current-call-footer"><span>Silakan menuju meja pelayanan saat nomor Anda dipanggil</span><strong>BPS Sumsel Melayani Dengan Sepenuh Hati</strong></div>
+                <div class="current-call-footer"><span>Silakan menuju meja pelayanan saat nomor Anda dipanggil</span><strong>BPS Sumatera Selatan Melayani Dengan Sepenuh Hati</strong></div>
             </article>
 
             <aside class="service-status-panel" aria-labelledby="service-status-heading">
@@ -75,7 +75,7 @@
         </section>
 
         <footer class="queue-footer"><span class="queue-announcement-label">PENGUMUMAN</span>
-            <p data-announcement>Selamat datang di Pelayanan Statistik Terpadu BPS Provinsi Sumatera Selatan. Mohon menjaga ketertiban dan menunggu nomor antrean Anda dipanggil.</p><span class="queue-footer-mark">BPS SUMSEL</span>
+            <p data-announcement>Selamat datang di Pelayanan Statistik Terpadu BPS Provinsi Sumatera Selatan. Mohon menjaga ketertiban dan menunggu nomor antrean Anda dipanggil.</p><span class="queue-footer-mark">BPS SUMATERA SELATAN</span>
         </footer>
     </main>
 </body>

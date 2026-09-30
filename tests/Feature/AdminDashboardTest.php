@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\VisitorEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class AdminDashboardTest extends TestCase
@@ -68,8 +69,57 @@ class AdminDashboardTest extends TestCase
             ->assertSee('Asal kategori pengunjung');
 
         $response->assertViewHas('todayTotal', 3)
+            ->assertViewHas('activeVisitorCount', 2)
             ->assertViewHas('servingCount', 1)
             ->assertViewHas('completedCount', 1);
+    }
+
+    public function test_dashboard_month_selection_filters_daily_and_distribution_data(): void
+    {
+        $admin = User::factory()->create(['name' => 'Admin BPS']);
+
+        try {
+            Carbon::setTestNow('2026-08-03 10:00:00');
+            VisitorEntry::create($this->visitorData([
+                'queue_no' => 'PST0001',
+                'service_code' => 'PST',
+                'queue_number' => 1,
+                'occupation' => 'ASN',
+            ]));
+
+            Carbon::setTestNow('2026-08-31 10:00:00');
+            VisitorEntry::create($this->visitorData([
+                'queue_no' => 'LPSE0001',
+                'service_code' => 'LPSE',
+                'queue_number' => 1,
+                'purpose' => 'LPSE',
+                'occupation' => 'Karyawan Swasta',
+            ]));
+
+            Carbon::setTestNow('2026-09-02 10:00:00');
+            VisitorEntry::create($this->visitorData([
+                'queue_no' => 'PPID0001',
+                'service_code' => 'PPID',
+                'queue_number' => 1,
+                'purpose' => 'PPID',
+                'occupation' => 'PELAJAR',
+            ]));
+
+            Carbon::setTestNow('2026-09-29 12:00:00');
+            $response = $this->actingAs($admin)
+                ->get(route('admin.dashboard', ['month' => '2026-08']));
+
+            $response->assertOk()
+                ->assertSee('2026-08')
+                ->assertSee('LAYANAN BULANAN')
+                ->assertViewHas('selectedTotal', 2)
+                ->assertViewHas('chartLabels', fn($labels): bool => count($labels) === 31 && $labels[0] === '01' && $labels[30] === '31')
+                ->assertViewHas('chartValues', fn($values): bool => array_sum($values) === 2 && $values[2] === 1 && $values[30] === 1)
+                ->assertViewHas('services', fn($services): bool => $services['PST']['count'] === 1 && $services['LPSE']['count'] === 1 && $services['PPID']['count'] === 0)
+                ->assertViewHas('occupations', fn($occupations): bool => $occupations['ASN']['count'] === 1 && $occupations['SWASTA']['count'] === 1 && $occupations['PELAJAR']['count'] === 0);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     private function visitorData(array $overrides = []): array

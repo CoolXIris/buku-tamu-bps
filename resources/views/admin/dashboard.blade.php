@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#10263d">
+    <meta name="theme-color" content="#102d63">
     <title>Dashboard Admin | Buku Tamu BPS Sumsel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,12 +15,12 @@
 <body class="admin-dashboard-page">
     <header class="admin-topbar">
         <a class="admin-brand" href="{{ route('admin.dashboard') }}">
-            <span class="admin-bps-mark" aria-hidden="true"><i></i><b></b><em></em></span>
-            <span><strong>Buku Tamu BPS Provinsi Sumsel</strong><small>Badan Pusat Statistik · Sumatera Selatan</small></span>
+            <img class="admin-bps-logo" src="{{ asset('images/logo_bps.svg') }}" alt="">
+            <span><strong>Buku Tamu</strong><small>BPS Provinsi Sumatera Selatan</small></span>
         </a>
         <nav class="admin-navigation" aria-label="Navigasi administrator">
             <a class="admin-nav-link is-current" href="{{ route('admin.dashboard') }}"><span class="nav-glyph" aria-hidden="true">▥</span> Dashboard</a>
-            <a class="admin-nav-link" href="{{ route('admin.guests.index') }}"><span class="nav-glyph" aria-hidden="true">♧</span> Daftar Buku Tamu <span class="nav-count">{{ $todayTotal }}</span></a>
+            <a class="admin-nav-link" href="{{ route('admin.guests.index') }}"><span class="nav-glyph" aria-hidden="true">♧</span> Daftar Buku Tamu <span class="nav-count">{{ $activeVisitorCount }}</span></a>
             <a class="admin-nav-link" href="{{ route('queue.screen') }}" target="_blank" rel="noopener"><span class="nav-glyph" aria-hidden="true">◉</span> Layar Antrean</a>
         </nav>
         <div class="admin-account">
@@ -37,7 +37,15 @@
                 <h1>Dashboard</h1>
                 <p>Pemantauan kunjungan dan pelayanan publik BPS Provinsi Sumatera Selatan.</p>
             </div>
-            <div class="date-chip"><span class="date-chip-dot"></span>{{ now()->translatedFormat('l, d F Y') }}</div>
+            <form class="month-filter" method="GET" action="{{ route('admin.dashboard') }}">
+                <label class="date-chip" for="dashboard-month"><span class="date-chip-dot"></span>
+                    <select id="dashboard-month" name="month" aria-label="Pilih bulan" onchange="this.form.submit()">
+                        @foreach ($availableMonths as $monthValue => $monthLabel)
+                        <option value="{{ $monthValue }}" @selected($selectedMonth === $monthValue)>{{ $monthLabel }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            </form>
         </div>
 
         <section class="metric-grid" aria-label="Ringkasan pengunjung hari ini">
@@ -60,21 +68,21 @@
 
         <section class="chart-panel" aria-labelledby="visits-chart-title">
             <div class="panel-heading chart-heading">
-                <div><span class="panel-kicker">AKTIVITAS MINGGUAN</span>
+                <div><span class="panel-kicker">AKTIVITAS BULANAN</span>
                     <h2 id="visits-chart-title">Jumlah pengunjung</h2>
-                    <p>Catatan kunjungan selama tujuh hari terakhir</p>
+                    <p>Pengunjung per hari · {{ $selectedMonthLabel }}</p>
                 </div>
                 <span class="chart-legend"><i></i> Pengunjung</span>
             </div>
-            <div class="chart-wrap"><canvas data-visits-chart aria-label="Grafik jumlah pengunjung selama tujuh hari terakhir" role="img"></canvas></div>
+            <div class="chart-wrap"><canvas data-visits-chart aria-label="Grafik jumlah pengunjung per hari untuk {{ $selectedMonthLabel }}" role="img"></canvas></div>
         </section>
 
         <div class="distribution-grid">
             <section class="distribution-panel" aria-labelledby="service-distribution-title">
                 <div class="panel-heading distribution-heading">
-                    <div><span class="panel-kicker">LAYANAN HARI INI</span>
+                    <div><span class="panel-kicker">LAYANAN BULANAN</span>
                         <h2 id="service-distribution-title">Distribusi pengunjung</h2>
-                    </div><span class="panel-total">{{ $todayTotal }} <small>tamu</small></span>
+                    </div><span class="panel-total">{{ number_format($selectedTotal) }} <small>tamu</small></span>
                 </div>
                 <div class="service-distribution-list">
                     @foreach ($services as $service)

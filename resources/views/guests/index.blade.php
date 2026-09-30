@@ -15,7 +15,7 @@
 <body class="guest-page">
     <header class="topbar">
         <a class="brand" href="{{ route('guests.index') }}" aria-label="BPS Provinsi Sumatera Selatan, beranda">
-            <span class="bps-mark bps-mark--small" aria-hidden="true"><i></i><b></b><em></em></span>
+            <img class="bps-logo bps-logo--small" src="{{ asset('images/logo_bps.svg') }}" alt="">
             <span class="brand-copy"><strong>Buku Tamu</strong><small>BPS Provinsi Sumatera Selatan</small></span>
         </a>
         <div class="topbar-note"><span class="status-dot"></span> Pelayanan hari ini</div>
@@ -24,8 +24,7 @@
     <main class="guest-main">
         <section class="welcome-block" aria-labelledby="welcome-title">
             <div class="bps-seal" aria-label="Lambang BPS">
-                <span class="bps-mark" aria-hidden="true"><i></i><b></b><em></em></span>
-                <span class="seal-caption">BPS</span>
+                <img class="bps-logo bps-logo--seal" src="{{ asset('images/logo_bps.svg') }}" alt="">
             </div>
             <p class="eyebrow">Badan Pusat Statistik</p>
             <h1 id="welcome-title">Selamat Datang di BPS<br class="mobile-break"> Provinsi Sumatera Selatan</h1>
@@ -44,23 +43,39 @@
         <section class="services-panel" aria-label="Pilihan layanan">
             <div class="service-grid" data-service-panel="external">
                 <button class="service-card service-card--pst" type="button" data-open-form data-purpose="PST">
-                    <span class="service-art"><span class="service-monogram">PST</span><span class="art-bars"><i></i><i></i><i></i></span></span>
-                    <span class="service-title">Pelayanan Statistik Terpadu</span>
+                    <span class="service-layout">
+                        <img class="service-art service-art--image" src="{{ asset('images/pst.png') }}" alt="">
+                        <span class="service-copy"><span class="service-monogram">PST</span><span class="service-title">Pelayanan Statistik Terpadu</span></span>
+                    </span>
                     <span class="service-arrow" aria-hidden="true">↗</span>
                 </button>
                 <button class="service-card service-card--lpse" type="button" data-open-form data-purpose="LPSE">
-                    <span class="service-art"><span class="service-monogram">LPSE</span><span class="art-diamonds"><i></i><i></i><i></i></span></span>
-                    <span class="service-title">Layanan Pengadaan Secara Elektronik</span>
+                    <span class="service-layout">
+                        <span class="service-art" aria-hidden="true"><span class="lpse-mark"><i></i><i></i><i></i></span></span>
+                        <span class="service-copy"><span class="service-monogram">LPSE</span><span class="service-title">Layanan Pengadaan Secara Elektronik</span></span>
+                    </span>
                     <span class="service-arrow" aria-hidden="true">↗</span>
                 </button>
                 <button class="service-card service-card--ppid" type="button" data-open-form data-purpose="PPID">
-                    <span class="service-art"><span class="service-monogram">PPID</span><span class="art-pages"><i></i><i></i><i></i></span></span>
-                    <span class="service-title">Pejabat Pengelola Informasi dan Dokumentasi</span>
+                    <span class="service-layout">
+                        <img class="service-art service-art--image" src="{{ asset('images/ppid.png') }}" alt="">
+                        <span class="service-copy"><span class="service-monogram">PPID</span><span class="service-title">Pejabat Pengelola Informasi dan Dokumentasi</span></span>
+                    </span>
                     <span class="service-arrow" aria-hidden="true">↗</span>
                 </button>
                 <button class="service-card service-card--event" type="button" data-open-form data-purpose="KEGIATAN">
-                    <span class="service-art"><span class="event-spark">✳</span><span class="event-rings"></span></span>
-                    <span class="service-title">Kegiatan Lainnya</span>
+                    <span class="service-layout">
+                        <span class="service-art" aria-hidden="true">
+                            <span class="art-calendar">
+                                <span class="cal-top"><i></i><i></i></span>
+                                <span class="cal-grid"><b></b><b></b><b></b></span>
+                            </span>
+                        </span>
+                        <span class="service-copy">
+                            <span class="service-monogram">UMUM</span>
+                            <span class="service-title">Kegiatan Lainnya</span>
+                        </span>
+                    </span>
                     <span class="service-arrow" aria-hidden="true">↗</span>
                 </button>
             </div>
@@ -79,12 +94,12 @@
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-agency">
-                <span class="bps-mark bps-mark--footer" aria-hidden="true"><i></i><b></b><em></em></span>
+                <img class="bps-logo bps-logo--footer" src="{{ asset('images/logo_bps.svg') }}" alt="">
                 <div><strong>BADAN PUSAT STATISTIK</strong><span>PROVINSI SUMATERA SELATAN</span></div>
             </div>
             <div class="footer-contact">
                 <strong>Palembang, Sumatera Selatan</strong>
-                <span>Jl. Kapten Anwar Sastro No. 1694/113, Sungai Pangeran, Ilir Timur I</span>
+                <span>Jalan Kapten Anwar Sastro No. 1694/1131, Sungai Pangeran, Ilir Timur I, Sungai Pangeran, Kec. Ilir Tim. I, Kota Palembang, Sumatera Selatan 30114</span>
                 <span>bps1600@bps.go.id <i></i> (0711) 351665</span>
             </div>
             <span class="footer-copy">© BPS Provinsi Sumatera Selatan</span>
