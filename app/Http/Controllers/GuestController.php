@@ -44,7 +44,10 @@ class GuestController extends Controller
         $entry = DB::transaction(function () use ($validated): VisitorEntry {
             $serviceCode = $validated['purpose'];
             $queuePrefix = $serviceCode === 'KEGIATAN' ? 'UMUM' : $serviceCode;
-            $serviceDate = now()->toDateString();
+            $serviceDayStart = now('Asia/Jakarta')->startOfDay();
+            $serviceDate = $serviceDayStart->toDateString();
+            $serviceDayStartUtc = $serviceDayStart->copy()->utc();
+            $nextServiceDayStartUtc = $serviceDayStart->copy()->addDay()->utc();
 
             QueueCounter::firstOrCreate(
                 ['service_code' => $serviceCode, 'service_date' => $serviceDate],
@@ -59,7 +62,8 @@ class GuestController extends Controller
 
             $existingEntries = VisitorEntry::query()
                 ->where('service_code', $serviceCode)
-                ->whereDate('created_at', $serviceDate)
+                ->where('created_at', '>=', $serviceDayStartUtc)
+                ->where('created_at', '<', $nextServiceDayStartUtc)
                 ->get(['queue_no', 'queue_number']);
             $existingMax = $existingEntries->max(function (VisitorEntry $entry) use ($queuePrefix): int {
                 $numberFromQueueNo = preg_match(

@@ -131,7 +131,7 @@ class GuestRegistrationTest extends TestCase
 
     public function test_queue_number_skips_existing_numbers_today_and_resets_for_a_new_day(): void
     {
-        Carbon::setTestNow('2026-09-30 10:00:00');
+        Carbon::setTestNow('2026-09-30 16:59:59');
 
         VisitorEntry::query()->create([
             'full_name' => 'Tamu Seeder',
@@ -150,7 +150,7 @@ class GuestRegistrationTest extends TestCase
             ->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
         $this->assertDatabaseHas('visitor_entries', ['queue_no' => 'PST0002']);
 
-        Carbon::setTestNow('2026-10-01 10:00:00');
+        Carbon::setTestNow('2026-09-30 17:00:00');
 
         $this->post(route('guests.store'), $this->guestData([
             'full_name' => 'Tamu Hari Berikutnya',
