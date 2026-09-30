@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\DB;
 
 class VisitorSearchLoadTestSeeder extends Seeder
 {
-    private const RECORD_COUNT = 5000;
+    private const RECORD_COUNT = 1000;
 
-    private const SERVICES = ['PST', 'LPSE', 'PPID', 'KEGIATAN'];
+    private const SERVICES = ['PST', 'LPSE', 'PPID', 'UMUM'];
 
     private const INSTITUTIONS = [
         'BPS Sumatera Selatan',
@@ -57,7 +57,7 @@ class VisitorSearchLoadTestSeeder extends Seeder
 
         $existingEmails = collect($emails)
             ->chunk(500)
-            ->flatMap(fn ($emailChunk) => DB::table('visitor_entries')->whereIn('email', $emailChunk)->pluck('email'))
+            ->flatMap(fn($emailChunk) => DB::table('visitor_entries')->whereIn('email', $emailChunk)->pluck('email'))
             ->flip();
 
         $rows = [];
@@ -78,7 +78,7 @@ class VisitorSearchLoadTestSeeder extends Seeder
             $occupationOther = $occupation === 'LAINNYA' ? $faker->jobTitle() : null;
 
             $rows[] = [
-                'queue_no' => $service.str_pad((string) $sequence, 6, '0', STR_PAD_LEFT),
+                'queue_no' => $service . str_pad((string) $sequence, 4, '0', STR_PAD_LEFT),
                 'service_code' => $service,
                 'queue_number' => $faker->numberBetween(1, 9999),
                 'full_name' => match ($sequence) {
@@ -90,7 +90,7 @@ class VisitorSearchLoadTestSeeder extends Seeder
                 'institution' => $sequence === 1
                     ? 'BPS Sumatera Selatan'
                     : $faker->randomElement(self::INSTITUTIONS),
-                'phone' => '08'.str_pad((string) $faker->numberBetween(0, 9999999999), 10, '0', STR_PAD_LEFT),
+                'phone' => '08' . str_pad((string) $faker->numberBetween(0, 9999999999), 10, '0', STR_PAD_LEFT),
                 'email' => $email,
                 'occupation' => $occupation,
                 'occupation_other' => $occupationOther,
@@ -119,6 +119,6 @@ class VisitorSearchLoadTestSeeder extends Seeder
 
     private function email(int $sequence): string
     {
-        return 'visitor.loadtest+'.str_pad((string) $sequence, 6, '0', STR_PAD_LEFT).'@example.test';
+        return 'visitor.loadtest+' . str_pad((string) $sequence, 6, '0', STR_PAD_LEFT) . '@example.test';
     }
 }

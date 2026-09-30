@@ -6,8 +6,8 @@ use App\Models\QueueCall;
 use App\Models\User;
 use App\Models\VisitorEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
@@ -26,71 +26,154 @@ class AdminGuestListTest extends TestCase
             'full_name' => 'Budi Pengadaan',
             'service_status' => 'serving',
         ]));
-        VisitorEntry::create($this->visitorData([
-            'queue_no' => 'PPID0001',
-            'service_code' => 'PPID',
-            'purpose' => 'PPID',
-            'service_status' => 'completed',
-        ]));
 
         $this->actingAs($admin)
             ->get(route('admin.guests.index', ['q' => 'Siti', 'service' => 'PST', 'status' => 'waiting']))
             ->assertOk()
             ->assertSee('PST0001')
             ->assertDontSee('LPSE0001')
-            ->assertSee('Siti Aminah')
-            ->assertViewHas('activeVisitorCount', 2);
+            ->assertSee('Siti Aminah');
     }
 
-    public function test_guest_list_shows_ten_entries_per_page_and_can_open_older_entries(): void
+    public function test_guest_search_matches_terms_across_fields_when_elasticsearch_is_not_configured(): void
     {
         $admin = User::factory()->create();
-
-        for ($number = 1; $number <= 11; $number++) {
-            VisitorEntry::create($this->visitorData([
-                'queue_no' => 'PST' . str_pad((string) $number, 4, '0', STR_PAD_LEFT),
-                'queue_number' => $number,
-            ]));
-        }
-
-        $this->actingAs($admin)
-            ->get(route('admin.guests.index'))
-            ->assertOk()
-            ->assertViewHas('entries', fn($entries): bool => $entries->perPage() === 10 && $entries->lastPage() === 2);
+        VisitorEntry::create($this->visitorData());
+        VisitorEntry::create($this->visitorData([
+            'queue_no' => 'LPSE0001',
+            'service_code' => 'LPSE',
+            'purpose' => 'LPSE',
+            'full_name' => 'Budi Pengadaan',
+        ]));
 
         $this->actingAs($admin)
-            ->get(route('admin.guests.index', ['page' => 2]))
+            ->get(route('admin.guests.index', ['q' => 'Aminah 0812']))
             ->assertOk()
-            ->assertSee('PST0001');
+            ->assertSee('PST0001')
+            ->assertDontSee('LPSE0001');
     }
 
-    public function test_guest_list_orders_by_latest_insert_and_displays_wib_time(): void
+    public function test_guest_search_uses_elasticsearch_fuzzy_results_and_preserves_relevance_order(): void
     {
         $admin = User::factory()->create();
+        $first = VisitorEntry::create($this->visitorData());
+        $second = VisitorEntry::create($this->visitorData([
+            'queue_no' => 'LPSE0001',
+            'service_code' => 'LPSE',
+            'purpose' => 'LPSE',
+            'full_name' => 'Siti Pengadaan',
+        ]));
 
-        Carbon::setTestNow(Carbon::parse('2026-09-29 07:48:47', 'UTC'));
-        try {
-            $olderEntry = VisitorEntry::create($this->visitorData());
-            DB::table('visitor_entries')->where('id', $olderEntry->id)->update(['created_at' => '2026-09-29 11:55:00']);
-            $latestEntry = VisitorEntry::create($this->visitorData([
-                'queue_no' => 'UMUM0377',
-                'service_code' => 'KEGIATAN',
-                'purpose' => 'KEGIATAN',
-                'queue_number' => 377,
-            ]));
+        config([
+            'services.elasticsearch.url' => 'https://elastic.example.test',
+            'services.elasticsearch.api_key' => 'test-api-key',
+            'services.elasticsearch.index' => 'bps-guests-test',
+        ]);
 
-            $this->actingAs($admin)
-                ->get(route('admin.guests.index'))
-                ->assertOk()
-                ->assertSee('14:48 WIB')
-                ->assertViewHas('entries', fn($entries): bool => $entries->first()->is($latestEntry));
+        Http::fake([
+            'elastic.example.test/bps-guests-test/_search' => Http::response([
+                'hits' => [
+                    'total' => ['value' => 2],
+                    'hits' => [
+                        ['_id' => (string) $second->id],
+                        ['_id' => (string) $first->id],
+                    ],
+                ],
+            ]),
+        ]);
 
-            $this->actingAs($admin)
-                ->getJson(route('admin.guests.show', $latestEntry))
-                ->assertJsonPath('created_at', '29/09/2026 14:48 WIB');
-        } finally {
-            Carbon::setTestNow();
-        }
+        $this->actingAs($admin)
+            ->get(route('admin.guests.index', ['q' => 'Sitti']))
+            ->assertOk()
+            ->assertSeeInOrder(['LPSE0001', 'PST0001']);
+
+        Http::assertSent(static function (ClientRequest $request): bool {
+            $searchClauses = data_get($request->data(), 'query.bool.should', []);
+            $multiMatch = collect($searchClauses)
+                ->first(static fn(array $clause): bool => isset($clause['multi_match']))['multi_match'] ?? [];
+            $partialSearch = collect($searchClauses)
+                ->first(static fn(array $clause): bool => data_get($clause, 'bool.should') !== null);
+            $partialNameQuery = collect(data_get($partialSearch, 'bool.should', []))
+                ->first(static fn(array $clause): bool => isset($clause['wildcard']['full_name.keyword']));
+
+            return $request->method() === 'POST'
+                && $request->hasHeader('Authorization', 'ApiKey test-api-key')
+                && data_get($multiMatch, 'fuzziness') === 'AUTO'
+                && in_array('full_name^5', data_get($multiMatch, 'fields', []), true)
+                && data_get($request->data(), 'query.bool.minimum_should_match') === 1
+                && ($partialNameQuery['wildcard']['full_name.keyword']['value'] ?? null) === '*Sitti*'
+                && ($partialNameQuery['wildcard']['full_name.keyword']['case_insensitive'] ?? false) === true
+                && data_get($request->data(), 'sort.0._score') === 'desc'
+                && data_get($request->data(), 'sort.2._id') === null;
+        });
+    }
+
+    public function test_guest_search_expands_sumsel_alias_to_sumatera_selatan(): void
+    {
+        $admin = User::factory()->create();
+        VisitorEntry::create($this->visitorData());
+
+        config([
+            'services.elasticsearch.url' => 'https://elastic.example.test',
+            'services.elasticsearch.api_key' => 'test-api-key',
+            'services.elasticsearch.index' => 'bps-guests-test',
+        ]);
+
+        Http::fake([
+            'elastic.example.test/bps-guests-test/_search' => Http::response([
+                'hits' => [
+                    'total' => ['value' => 1],
+                    'hits' => [['_id' => '1', '_source' => ['full_name' => 'Siti Aminah']]],
+                ],
+            ]),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.guests.index', ['q' => 'sumsel']))
+            ->assertOk()
+            ->assertSee('Siti Aminah');
+
+        Http::assertSent(static function (ClientRequest $request): bool {
+            $clauses = data_get($request->data(), 'query.bool.should', []);
+
+            return collect($clauses)->contains(
+                static fn(array $clause): bool =>
+                data_get($clause, 'multi_match.query') === 'sumatera selatan'
+                    && data_get($clause, 'multi_match.operator') === 'and'
+            );
+        });
+    }
+
+    public function test_guest_reindex_command_creates_the_index_and_bulk_imports_existing_entries(): void
+    {
+        VisitorEntry::create($this->visitorData());
+        config([
+            'services.elasticsearch.url' => 'https://elastic.example.test',
+            'services.elasticsearch.api_key' => 'test-api-key',
+            'services.elasticsearch.index' => 'bps-guests-test',
+        ]);
+
+        Http::fake(static function (ClientRequest $request) {
+            if ($request->method() === 'HEAD') {
+                return Http::response([], 404);
+            }
+
+            if (str_ends_with($request->url(), '/_bulk')) {
+                return Http::response(['errors' => false]);
+            }
+
+            return Http::response(['acknowledged' => true]);
+        });
+
+        $this->artisan('guests:reindex-search')
+            ->expectsOutput('Indeks Elasticsearch siap. 1 data tamu diproses.')
+            ->assertExitCode(0);
+
+        Http::assertSent(static fn(ClientRequest $request): bool => $request->method() === 'PUT'
+            && data_get($request->data(), 'mappings.properties.service_code.fields.keyword.type') === 'keyword');
+        Http::assertSent(static fn(ClientRequest $request): bool => $request->method() === 'POST'
+            && str_ends_with($request->url(), '/_bulk')
+            && str_contains($request->body(), 'Siti Aminah'));
     }
 
     public function test_admin_can_read_guest_details_and_change_service_status(): void
@@ -103,7 +186,6 @@ class AdminGuestListTest extends TestCase
             'occupation' => 'LAINNYA',
             'occupation_other' => 'Konsultan',
             'purpose' => 'KEGIATAN',
-            'service_code' => 'KEGIATAN',
             'purpose_other' => 'Rapat koordinasi',
         ]));
 

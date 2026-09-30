@@ -10,6 +10,7 @@ class QueueCounter extends Model
 
     protected $fillable = [
         'service_code',
+        'service_date',
         'last_number',
     ];
 }

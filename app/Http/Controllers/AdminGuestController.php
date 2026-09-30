@@ -49,17 +49,14 @@ class AdminGuestController extends Controller
     public function index(Request $request): View
     {
         $filters = $this->validatedFilters($request);
-        $entries = $this->filteredEntries($filters)
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->withQueryString();
+        $entries = app(GuestSearch::class)->paginate($filters, $request->integer('page', 1))->withQueryString();
 
         return view('admin.guests.index', [
             'entries' => $entries,
             'filters' => $filters,
             'services' => self::SERVICES,
             'statuses' => self::STATUSES,
-            'activeVisitorCount' => VisitorEntry::query()->inProgress()->count(),
+            'totalVisitors' => VisitorEntry::count(),
             'admin' => Auth::user(),
         ]);
     }
@@ -68,9 +65,7 @@ class AdminGuestController extends Controller
     {
         return response()->json([
             'queue_no' => $visitorEntry->queue_no,
-            'created_at' => $visitorEntry->created_at
-                ? $visitorEntry->created_at->copy()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i') . ' WIB'
-                : null,
+            'created_at' => $visitorEntry->created_at?->format('d/m/Y H:i'),
             'full_name' => $visitorEntry->full_name,
             'institution' => $visitorEntry->institution,
             'purpose' => self::PURPOSES[$visitorEntry->purpose] ?? self::PURPOSES[$visitorEntry->service_code] ?? $visitorEntry->purpose,
@@ -135,11 +130,10 @@ class AdminGuestController extends Controller
         ]));
 
         foreach ($this->filteredEntries($filters)->orderBy('created_at')->orderBy('id')->cursor() as $entry) {
-            $createdAt = $entry->created_at?->copy()->setTimezone('Asia/Jakarta');
             $writer->addRow(Row::fromValues([
                 $entry->queue_no,
-                $createdAt?->format('d/m/Y'),
-                $createdAt?->format('H:i:s'),
+                $entry->created_at?->format('d/m/Y'),
+                $entry->created_at?->format('H:i:s'),
                 $entry->full_name,
                 $entry->institution,
                 self::PURPOSES[$entry->purpose] ?? self::PURPOSES[$entry->service_code] ?? $entry->purpose,

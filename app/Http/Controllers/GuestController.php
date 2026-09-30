@@ -42,22 +42,41 @@ class GuestController extends Controller
         $entry = DB::transaction(function () use ($validated): VisitorEntry {
             $serviceCode = $validated['purpose'];
             $queuePrefix = $serviceCode === 'KEGIATAN' ? 'UMUM' : $serviceCode;
+            $serviceDate = now()->toDateString();
 
-            QueueCounter::firstOrCreate(['service_code' => $serviceCode], ['last_number' => 0]);
+            QueueCounter::firstOrCreate(
+                ['service_code' => $serviceCode, 'service_date' => $serviceDate],
+                ['last_number' => 0],
+            );
 
             $counter = QueueCounter::query()
                 ->where('service_code', $serviceCode)
+                ->where('service_date', $serviceDate)
                 ->lockForUpdate()
                 ->first();
 
-            $number = $counter->last_number + 1;
+            $existingEntries = VisitorEntry::query()
+                ->where('service_code', $serviceCode)
+                ->whereDate('created_at', $serviceDate)
+                ->get(['queue_no', 'queue_number']);
+            $existingMax = $existingEntries->max(function (VisitorEntry $entry) use ($queuePrefix): int {
+                $numberFromQueueNo = preg_match(
+                    '/^'.preg_quote($queuePrefix, '/').'(\d+)$/',
+                    $entry->queue_no,
+                    $matches,
+                ) ? (int) $matches[1] : 0;
+
+                return max((int) $entry->queue_number, $numberFromQueueNo);
+            }) ?? 0;
+
+            $number = max((int) $counter->last_number, $existingMax) + 1;
             $counter->update(['last_number' => $number]);
 
             return VisitorEntry::create([
                 ...$validated,
                 'service_code' => $serviceCode,
                 'queue_number' => $number,
-                'queue_no' => $queuePrefix . str_pad((string) $number, 4, '0', STR_PAD_LEFT),
+                'queue_no' => $queuePrefix.str_pad((string) $number, 4, '0', STR_PAD_LEFT),
             ]);
         });
 

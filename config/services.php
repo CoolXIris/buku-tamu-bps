@@ -35,7 +35,7 @@ return [
         ],
     ],
 
-    'pst_digital_url' => env('PST_DIGITAL_URL', 'https://perpustakaan.bps.go.id/digilib/library/login'),
+    'pst_digital_url' => env('PST_DIGITAL_URL', 'https://pst.bps.go.id/'),
 
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),

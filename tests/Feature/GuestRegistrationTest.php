@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\QueueCounter;
 use App\Models\VisitorEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class GuestRegistrationTest extends TestCase
@@ -87,6 +88,7 @@ class GuestRegistrationTest extends TestCase
 
         QueueCounter::query()->create([
             'service_code' => 'LPSE',
+            'service_date' => now()->toDateString(),
             'last_number' => 2,
         ]);
 
@@ -98,6 +100,44 @@ class GuestRegistrationTest extends TestCase
             ->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
 
         $this->assertDatabaseHas('visitor_entries', ['queue_no' => 'LPSE0003']);
+    }
+
+    public function test_queue_number_skips_existing_numbers_today_and_resets_for_a_new_day(): void
+    {
+        Carbon::setTestNow('2026-09-30 10:00:00');
+
+        VisitorEntry::query()->create([
+            'full_name' => 'Tamu Seeder',
+            'gender' => 'Perempuan',
+            'institution' => 'BPS',
+            'phone' => '081111111111',
+            'email' => 'seeder@example.test',
+            'occupation' => 'ASN',
+            'purpose' => 'PST',
+            'service_code' => 'PST',
+            'queue_number' => 1,
+            'queue_no' => 'PST0001',
+        ]);
+
+        $this->post(route('guests.store'), $this->guestData())
+            ->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
+        $this->assertDatabaseHas('visitor_entries', ['queue_no' => 'PST0002']);
+
+        Carbon::setTestNow('2026-10-01 10:00:00');
+
+        $this->post(route('guests.store'), $this->guestData([
+            'full_name' => 'Tamu Hari Berikutnya',
+            'email' => 'besok@example.test',
+        ]))->assertRedirect(route('guests.receipt', VisitorEntry::query()->latest('id')->first()));
+
+        $this->assertSame(2, VisitorEntry::query()->where('queue_no', 'PST0001')->count());
+        $this->assertDatabaseHas('queue_counters', [
+            'service_code' => 'PST',
+            'service_date' => '2026-10-01',
+            'last_number' => 1,
+        ]);
+
+        Carbon::setTestNow();
     }
 
     private function guestData(array $overrides = []): array
