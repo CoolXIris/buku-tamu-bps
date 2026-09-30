@@ -36,6 +36,23 @@ Untuk mengaktifkan Google OAuth:
 
 Dashboard menampilkan jumlah kunjungan hari ini, status pelayanan, tren tujuh hari, serta distribusi layanan dan pekerjaan. Status kunjungan baru dimulai sebagai `waiting`; halaman daftar tamu nantinya dapat mengubahnya menjadi `serving` atau `completed`.
 
+### Pencarian Elasticsearch
+
+Pencarian daftar tamu dapat memakai Elasticsearch terkelola dari Elastic Cloud atau Elasticsearch Serverless, tanpa Docker dan tanpa paket PHP tambahan. Buat deployment, siapkan API key dengan hak `read`, `write`, dan `create_index` untuk indeks yang digunakan, lalu isi `ELASTICSEARCH_URL`, `ELASTICSEARCH_API_KEY`, dan opsional `ELASTICSEARCH_GUEST_INDEX` di `.env`. `ELASTICSEARCH_URL` adalah URL endpoint deployment, bukan URL halaman dashboard.
+
+Jalankan `php artisan optimize:clear`, lalu `php artisan guests:reindex-search` untuk membuat indeks dan mengimpor data lama. Data tamu yang dibuat atau diubah selanjutnya disinkronkan setelah transaksi database berhasil. Jika konfigurasi kosong atau Elasticsearch sedang tidak dapat dihubungi, halaman tetap mencari melalui database dengan pencocokan kata lintas kolom; fuzzy matching dan ranking relevansi hanya tersedia ketika Elasticsearch aktif.
+
+Indeks memuat nama, instansi, antrean, keperluan, layanan, pekerjaan, telepon, email, dan status tamu. Pastikan penggunaan layanan cloud, lokasi pemrosesan, dan retensi data sesuai kebijakan perlindungan data organisasi sebelum mengaktifkannya.
+
+Untuk membuat 5.000 data sintetis khusus pengujian pencarian (dengan tanggal masuk acak selama tiga tahun), jalankan hanya pada database lokal/pengujian:
+
+```sh
+php artisan db:seed --class=VisitorSearchLoadTestSeeder
+php artisan guests:reindex-search
+```
+
+Seeder ini tidak menghapus data, aman dijalankan ulang, memakai email `example.test`, dan tidak dijalankan oleh `php artisan db:seed` biasa. Data uji baru masuk ke Elasticsearch setelah perintah reindex selesai.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.

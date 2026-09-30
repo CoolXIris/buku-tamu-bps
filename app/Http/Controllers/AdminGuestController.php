@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\QueueCall;
 use App\Models\VisitorEntry;
+use App\Services\GuestSearch;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,11 +49,7 @@ class AdminGuestController extends Controller
     public function index(Request $request): View
     {
         $filters = $this->validatedFilters($request);
-        $entries = $this->filteredEntries($filters)
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->paginate(12)
-            ->withQueryString();
+        $entries = app(GuestSearch::class)->paginate($filters, $request->integer('page', 1))->withQueryString();
 
         return view('admin.guests.index', [
             'entries' => $entries,
@@ -167,17 +164,6 @@ class AdminGuestController extends Controller
 
     private function filteredEntries(array $filters)
     {
-        return VisitorEntry::query()
-            ->when($filters['service'] ?? null, fn($query, string $service) => $query->where('service_code', $service))
-            ->when($filters['status'] ?? null, fn($query, string $status) => $query->where('service_status', $status))
-            ->when($filters['q'] ?? null, function ($query, string $search): void {
-                $query->where(function ($nested) use ($search): void {
-                    $nested->where('queue_no', 'like', '%' . $search . '%')
-                        ->orWhere('full_name', 'like', '%' . $search . '%')
-                        ->orWhere('institution', 'like', '%' . $search . '%')
-                        ->orWhere('purpose_other', 'like', '%' . $search . '%')
-                        ->orWhere('purpose', 'like', '%' . $search . '%');
-                });
-            });
+        return app(GuestSearch::class)->databaseQuery($filters)->reorder();
     }
 }

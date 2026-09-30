@@ -47,4 +47,10 @@ return [
         ))),
     ],
 
+    'elasticsearch' => [
+        'url' => env('ELASTICSEARCH_URL'),
+        'api_key' => env('ELASTICSEARCH_API_KEY'),
+        'index' => env('ELASTICSEARCH_GUEST_INDEX', 'bps-guest-entries'),
+    ],
+
 ];

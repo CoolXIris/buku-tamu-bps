@@ -52,7 +52,7 @@
                     <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7" />
                     <path d="m16 16 4.3 4.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
                 </svg>
-                <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Cari nama tamu, instansi, nomor antrean, atau keperluan..." aria-label="Cari daftar tamu">
+                <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Cari nama, instansi, antrean, keperluan, kontak, atau pekerjaan..." aria-label="Cari daftar tamu">
             </label>
             <label class="filter-control"><span>Layanan</span>
                 <select name="service" aria-label="Filter layanan">
