@@ -33,7 +33,8 @@ class AdminGuestListTest extends TestCase
             ->assertOk()
             ->assertSee('PST0001')
             ->assertDontSee('LPSE0001')
-            ->assertSee('Siti Aminah');
+            ->assertSee('Siti Aminah')
+            ->assertDontSee('Layar Antrean');
     }
 
     public function test_guest_list_badge_counts_only_waiting_and_serving_visitors(): void
@@ -416,9 +417,14 @@ class AdminGuestListTest extends TestCase
         ]));
         QueueCall::create(['visitor_entry_id' => $serving->id, 'counter_number' => 4]);
 
+        $this->assertSame('/layar-antrean', route('queue.screen', [], false));
+        $this->assertSame('/layar-antrean/data', route('queue.data', [], false));
+
         $this->get(route('queue.screen'))
             ->assertOk()
             ->assertSee('layar-antrean');
+
+        $this->get('/adminbps-tamu/layar-antrean')->assertNotFound();
 
         $this->getJson(route('queue.data'))
             ->assertOk()

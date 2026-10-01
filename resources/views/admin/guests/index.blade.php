@@ -22,7 +22,6 @@
         <nav class="admin-navigation" aria-label="Navigasi administrator">
             <a class="admin-nav-link" href="{{ route('admin.dashboard') }}"><span class="nav-glyph" aria-hidden="true">▥</span> Dashboard</a>
             <a class="admin-nav-link is-current" href="{{ route('admin.guests.index') }}"><span class="nav-glyph" aria-hidden="true">♧</span> Daftar Buku Tamu <span class="nav-count">{{ $activeVisitorCount }}</span></a>
-            <a class="admin-nav-link" href="{{ route('queue.screen') }}" target="_blank" rel="noopener"><span class="nav-glyph" aria-hidden="true">◉</span> Layar Antrean</a>
         </nav>
         <div class="admin-account">
             <span class="account-avatar">{{ mb_strtoupper(mb_substr($admin->name, 0, 1)) }}</span>

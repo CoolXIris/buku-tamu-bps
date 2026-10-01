@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [GuestController::class, 'index'])->name('guests.index');
 Route::post('/kunjungan', [GuestController::class, 'store'])->name('guests.store');
 Route::get('/struk/{visitorEntry}', [GuestController::class, 'receipt'])->name('guests.receipt');
-Route::get('/adminbps-tamu/layar-antrean', [QueueScreenController::class, 'index'])->name('queue.screen');
-Route::get('/adminbps-tamu/layar-antrean/data', [QueueScreenController::class, 'data'])->name('queue.data');
+Route::get('/layar-antrean', [QueueScreenController::class, 'index'])->name('queue.screen');
+Route::get('/layar-antrean/data', [QueueScreenController::class, 'data'])->name('queue.data');
 
 Route::prefix('adminbps-tamu')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'home'])->name('home');

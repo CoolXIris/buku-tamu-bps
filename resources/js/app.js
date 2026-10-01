@@ -487,7 +487,7 @@ if (queueScreen) {
 	let lastCallEventId = null;
 	let pollInProgress = false;
 
-	const formatQueueNumber = (number) => number?.replace(/^([A-Z]+)(\d+)$/, '$1-$2') ?? '--';
+	const formatQueueNumber = (number) => number ?? '--';
 	const makeText = (tagName, className, text) => {
 		const element = document.createElement(tagName);
 		element.className = className;

@@ -66,7 +66,8 @@ class AdminDashboardTest extends TestCase
             ->assertSee('SEDANG DILAYANI')
             ->assertSee('SUDAH DILAYANI')
             ->assertSee('Jumlah pengunjung')
-            ->assertSee('Asal kategori pengunjung');
+            ->assertSee('Asal kategori pengunjung')
+            ->assertDontSee('Layar Antrean');
 
         $response->assertViewHas('todayTotal', 3)
             ->assertViewHas('activeVisitorCount', 2)
