@@ -150,6 +150,20 @@ let pendingCallRow = null;
 let editingGuestRow = null;
 let busyCounterAssignments = callCounterSelect ? JSON.parse(callCounterSelect.dataset.counterOccupants ?? '{}') : {};
 let toastTimer;
+const spokenQueuePrefixes = {
+	PST: 'pe es te',
+	LPSE: 'el pe es e',
+	PPID: 'pe pe i de',
+	UMUM: 'umum',
+};
+
+function formatQueueNumberForSpeech(queueNo) {
+	const match = queueNo.match(/^([A-Z]+)(\d+)$/);
+	if (!match) return queueNo;
+
+	const prefix = spokenQueuePrefixes[match[1]] ?? match[1].split('').join(' ');
+	return `${prefix} ${match[2]}`;
+}
 
 function showAdminToast(message, isError = false) {
 	if (!toast) return;
@@ -340,7 +354,7 @@ async function updateGuestStatus(row, status, announce = false, counterNumber = 
 	showAdminToast(result.message);
 	if (announce && 'speechSynthesis' in window) {
 		window.speechSynthesis.cancel();
-		const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${result.queue_no.replace(/([A-Z]+)(\d+)/, '$1 $2')}, silakan menuju loket ${result.counter_number}.`);
+		const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${formatQueueNumberForSpeech(result.queue_no)}, silakan menuju loket ${result.counter_number}.`);
 		announcement.lang = 'id-ID';
 		window.speechSynthesis.speak(announcement);
 	}
@@ -561,7 +575,7 @@ if (queueScreen) {
 		});
 		if ('speechSynthesis' in window) {
 			window.speechSynthesis.cancel();
-			const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${call.queue_no.replace(/([A-Z]+)(\d+)/, '$1 $2')}, silakan menuju loket ${call.counter_number}.`);
+			const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${formatQueueNumberForSpeech(call.queue_no)}, silakan menuju loket ${call.counter_number}.`);
 			announcement.lang = 'id-ID';
 			window.speechSynthesis.speak(announcement);
 		}
