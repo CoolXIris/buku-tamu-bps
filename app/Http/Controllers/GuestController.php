@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\QueueCounter;
 use App\Models\VisitorEntry;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -93,10 +95,15 @@ class GuestController extends Controller
     public function receipt(VisitorEntry $visitorEntry): View
     {
         abort_unless(isset(self::SERVICES[$visitorEntry->service_code]), 404);
+        $surveyUrl = 'http://s.bps.go.id/SKDSumsel';
 
         return view('guests.receipt', [
             'entry' => $visitorEntry,
             'serviceName' => self::SERVICES[$visitorEntry->service_code],
+            'surveyUrl' => $surveyUrl,
+            'surveyQrCode' => (new SvgWriter())->write(
+                QrCode::create($surveyUrl)->setSize(240)->setMargin(4),
+            )->getDataUri(),
         ]);
     }
 }

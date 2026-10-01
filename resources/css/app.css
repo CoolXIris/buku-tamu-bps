@@ -185,7 +185,9 @@ button, input, select { font: inherit; }
 .receipt-details dt { color: #555; }
 .receipt-details dd { margin: 0; overflow-wrap: anywhere; font-weight: 700; }
 .receipt-thanks { margin: 15px 0 10px; text-align: center; font-size: 14px; line-height: 1.5; }
-.receipt-url { margin: 0; text-align: center; font-size: 13px; }
+.receipt-qr-block { display: grid; justify-items: center; gap: 3px; margin-top: 8px; }
+.receipt-qr { width: 28mm; height: 28mm; display: block; image-rendering: pixelated; }
+.receipt-url { margin: 0; text-align: center; font-size: 11px; line-height: 1.4; }
 .receipt-actions { display: grid; gap: 12px; margin: 20px auto; width: min(100%, 320px); }
 .receipt-actions a { color: #24577f; text-align: center; font-size: 16px; text-decoration: none; }
 .print-button { min-height: 44px; }

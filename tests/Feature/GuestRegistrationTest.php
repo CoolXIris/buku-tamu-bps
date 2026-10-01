@@ -20,6 +20,11 @@ class GuestRegistrationTest extends TestCase
 
         $response->assertRedirect(route('guests.receipt', $entry));
         $this->assertSame('PST0001', $entry->queue_no);
+        $this->get(route('guests.receipt', $entry))
+            ->assertOk()
+            ->assertSee('data:image/svg+xml;base64,', false)
+            ->assertSee('href="http://s.bps.go.id/SKDSumsel"', false)
+            ->assertSee('s.bps.go.id/SKDSumsel');
         $this->assertDatabaseHas('visitor_entries', [
             'full_name' => 'Siti Aminah',
             'service_code' => 'PST',

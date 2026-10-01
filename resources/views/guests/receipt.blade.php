@@ -32,8 +32,12 @@
                     <dd>{{ $entry->display_created_at->format('d/m/Y H:i') }} WIB</dd>
                 </div>
             </dl>
+            <div class="receipt-qr-block">
+                <img class="receipt-qr" src="{{ $surveyQrCode }}" alt="QR code Survei Kebutuhan Data">
+                <p class="receipt-url">Survei Kebutuhan Data</p>
+                <a class="receipt-url" href="{{ $surveyUrl }}">s.bps.go.id/SKDSumsel</a>
+            </div>
             <p class="receipt-thanks">Terima kasih telah berkunjung.<br>Mohon menunggu nomor Anda dipanggil.</p>
-            <p class="receipt-url">bps.go.id</p>
         </article>
         <div class="receipt-actions no-print">
             <button class="print-button" type="button" onclick="window.print()"><span aria-hidden="true">▣</span> Cetak struk</button>
