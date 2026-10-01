@@ -121,7 +121,11 @@ button, input, select { font: inherit; }
 .privacy-note { margin: 21px 0 0; color: #7b8795; font-size: 14px; }
 .privacy-note span { margin-right: 5px; color: #4c9870; }
 .site-footer { color: #e8edf5; background: linear-gradient(110deg, #102d63, #0b214e 68%, #143365); }
-.footer-inner { width: min(100% - 40px, 1020px); min-height: 140px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr auto; gap: 35px; align-items: center; }
+.footer-inner { width: min(100% - 40px, 1020px); min-height: 140px; margin: 0 auto; display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1.2fr) auto; gap: 25px; align-items: center; }
+.footer-admin-link { width: 40px; height: 40px; display: grid; place-items: center; align-self: end; margin-bottom: 18px; border: 1px solid #8298b8; border-radius: 5px; color: #fff; background: #ffffff0a; }
+.footer-admin-link svg { width: 27px; height: 27px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.footer-admin-link:hover { color: #c7e99c; border-color: #c7e99c; background: #ffffff15; }
+.footer-admin-link:focus-visible { outline: 2px solid white; outline-offset: 3px; }
 .footer-agency { display: flex; align-items: center; gap: 12px; }
 .bps-logo--footer { width: 46px; height: 36px; margin-right: -7px; }
 .footer-agency div { display: grid; gap: 3px; font-size: 15px; font-style: italic; }
@@ -208,6 +212,7 @@ button, input, select { font: inherit; }
     .service-arrow { right: 10px; bottom: 10px; }
     .services-panel { min-height: 285px; }
     .footer-inner { width: min(100% - 34px, 460px); grid-template-columns: 1fr; gap: 15px; padding: 24px 0 18px; }
+    .footer-admin-link { grid-row: 4; align-self: start; margin: 0; }
     .footer-contact { padding-left: 58px; }
     .footer-copy { padding: 0 0 0 58px; align-self: auto; }
     .guest-modal { max-height: 94vh; padding-top: 25px; }
@@ -353,7 +358,7 @@ button, input, select { font: inherit; }
 @media (max-width: 850px) {
     .admin-topbar { flex-wrap: wrap; gap: 0 20px; padding-top: 10px; }
     .admin-navigation { order: 3; min-height: 46px; flex-basis: 100%; margin-top: 7px; }
-    .admin-nav-link { padding: 0 11px; }
+    .admin-nav-link { padding: 0 5px; }
     .admin-nav-link.is-current::after { right: 10px; left: 10px; }
     .distribution-grid { gap: 12px; }
     .distribution-panel { padding: 17px; }

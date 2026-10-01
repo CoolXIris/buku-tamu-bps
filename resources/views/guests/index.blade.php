@@ -92,6 +92,13 @@
 
     <footer class="site-footer">
         <div class="footer-inner">
+            <a class="footer-admin-link" href="{{ url('/adminbps-tamu') }}" aria-label="Masuk ke halaman admin" title="Admin">
+                <svg viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+                    <path d="M20 3.5 34 9v9.2c0 8.2-5.1 14.7-14 18.3C11.1 32.9 6 26.4 6 18.2V9l14-5.5Z" />
+                    <circle cx="20" cy="15" r="4" />
+                    <path d="M11.5 28c1.7-4 4.5-6 8.5-6s6.8 2 8.5 6" />
+                </svg>
+            </a>
             <div class="footer-agency">
                 <img class="bps-logo bps-logo--footer" src="{{ asset('images/logo_bps.svg') }}" alt="">
                 <div><strong>BADAN PUSAT STATISTIK</strong><span>PROVINSI SUMATERA SELATAN</span></div>
