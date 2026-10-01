@@ -63,6 +63,26 @@ class AdminGuestListTest extends TestCase
             ->assertSee('class="nav-count">0</span>', false);
     }
 
+    public function test_guest_list_preserves_legacy_time_and_converts_new_entries_to_wib(): void
+    {
+        $admin = User::factory()->create();
+        $legacyEntry = VisitorEntry::create($this->visitorData());
+        $newEntry = VisitorEntry::create($this->visitorData([
+            'queue_no' => 'PST0002',
+            'queue_number' => 2,
+            'created_at_is_utc' => true,
+        ]));
+        VisitorEntry::query()->whereKey($legacyEntry->id)->update(['created_at' => '2026-10-01 07:45:00']);
+        VisitorEntry::query()->whereKey($newEntry->id)->update(['created_at' => '2026-10-01 07:45:00']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.guests.index'))
+            ->assertOk()
+            ->assertSee('07:45 WIB')
+            ->assertSee('14:45 WIB')
+            ->assertSee('01/10/2026');
+    }
+
     public function test_guest_search_matches_terms_across_fields_when_elasticsearch_is_not_configured(): void
     {
         $admin = User::factory()->create();

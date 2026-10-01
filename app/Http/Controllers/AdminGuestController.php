@@ -81,7 +81,7 @@ class AdminGuestController extends Controller
 
         return response()->json([
             'queue_no' => $visitorEntry->queue_no,
-            'created_at' => $visitorEntry->created_at?->format('d/m/Y H:i'),
+            'created_at' => $visitorEntry->display_created_at?->format('d/m/Y H:i'),
             'full_name' => $visitorEntry->full_name,
             'institution' => $visitorEntry->institution,
             'purpose' => self::PURPOSES[$visitorEntry->purpose] ?? self::PURPOSES[$visitorEntry->service_code] ?? $visitorEntry->purpose,
@@ -234,10 +234,11 @@ class AdminGuestController extends Controller
         ]));
 
         foreach ($this->filteredEntries($filters)->orderBy('created_at')->orderBy('id')->cursor() as $entry) {
+            $displayCreatedAt = $entry->display_created_at;
             $writer->addRow(Row::fromValues([
                 $entry->queue_no,
-                $entry->created_at?->format('d/m/Y'),
-                $entry->created_at?->format('H:i:s'),
+                $displayCreatedAt?->format('d/m/Y'),
+                $displayCreatedAt?->format('H:i:s'),
                 $entry->full_name,
                 $entry->institution,
                 self::PURPOSES[$entry->purpose] ?? self::PURPOSES[$entry->service_code] ?? $entry->purpose,

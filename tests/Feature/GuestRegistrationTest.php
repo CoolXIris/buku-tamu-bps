@@ -25,6 +25,7 @@ class GuestRegistrationTest extends TestCase
             'service_code' => 'PST',
             'queue_no' => 'PST0001',
             'dtsen_update' => false,
+            'created_at_is_utc' => true,
         ]);
 
         $this->post(route('guests.store'), $this->guestData(['purpose' => 'PST']))

@@ -97,7 +97,7 @@
                         $statusName = $entry->service_status === 'serving' && $entry->latestCall?->counter_number
                             ? 'Dilayani di loket ke-' . $entry->latestCall->counter_number
                             : ($statuses[$entry->service_status] ?? $entry->service_status);
-                        $localCreatedAt = $entry->created_at->copy()->setTimezone('Asia/Jakarta');
+                        $displayCreatedAt = $entry->display_created_at;
                         @endphp
                         <tr data-guest-row data-entry-id="{{ $entry->id }}" data-status-url="{{ route('admin.guests.status', $entry) }}" data-detail-url="{{ route('admin.guests.show', $entry) }}" data-update-url="{{ route('admin.guests.update', $entry) }}" data-delete-url="{{ route('admin.guests.destroy', $entry) }}" data-queue-no="{{ $entry->queue_no }}">
                             <td><span class="queue-pill">{{ $entry->queue_no }}</span></td>
@@ -110,7 +110,7 @@
                                 <div class="purpose-cell"><span class="service-pill service-pill--{{ strtolower($entry->service_code) }}">{{ $serviceName }}</span><span class="purpose-label">{{ $entry->purpose_other ?: $purposeName }}</span></div>
                             </td>
                             <td>
-                                <div class="arrival-time"><strong>{{ $entry->created_at->format('H:i') }} WIB</strong><small>{{ $entry->created_at->format('d/m/Y') }}</small></div>
+                                <div class="arrival-time"><strong>{{ $displayCreatedAt->format('H:i') }} WIB</strong><small>{{ $displayCreatedAt->format('d/m/Y') }}</small></div>
                             </td>
                             <td><span class="dtsen-value">{{ $entry->service_code === 'PST' ? ($entry->dtsen_update ? 'Ya' : 'Tidak') : '—' }}</span></td>
                             <td><span class="status-pill status-pill--{{ $entry->service_status }}"><i></i>{{ $statusName }}</span></td>

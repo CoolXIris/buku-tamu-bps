@@ -6,6 +6,7 @@ use App\Services\GuestSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -31,8 +32,18 @@ class VisitorEntry extends Model
         'purpose',
         'purpose_other',
         'dtsen_update',
+        'created_at_is_utc',
         'service_status',
     ];
+
+    public function getDisplayCreatedAtAttribute(): ?Carbon
+    {
+        $createdAt = $this->created_at?->copy();
+
+        return $createdAt && $this->created_at_is_utc
+            ? $createdAt->setTimezone('Asia/Jakarta')
+            : $createdAt;
+    }
 
     protected static function booted(): void
     {
@@ -74,6 +85,7 @@ class VisitorEntry extends Model
 
     protected $casts = [
         'dtsen_update' => 'boolean',
+        'created_at_is_utc' => 'boolean',
     ];
 
     public function latestCall(): HasOne

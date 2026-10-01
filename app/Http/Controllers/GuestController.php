@@ -83,6 +83,7 @@ class GuestController extends Controller
                 'service_code' => $serviceCode,
                 'queue_number' => $number,
                 'queue_no' => $queuePrefix . str_pad((string) $number, 4, '0', STR_PAD_LEFT),
+                'created_at_is_utc' => true,
             ]);
         });
 

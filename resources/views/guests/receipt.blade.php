@@ -29,7 +29,7 @@
                 </div>
                 <div>
                     <dt>Tanggal</dt>
-                    <dd>{{ $entry->created_at->copy()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i') }} WIB</dd>
+                    <dd>{{ $entry->display_created_at->format('d/m/Y H:i') }} WIB</dd>
                 </div>
             </dl>
             <p class="receipt-thanks">Terima kasih telah berkunjung.<br>Mohon menunggu nomor Anda dipanggil.</p>
