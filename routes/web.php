@@ -24,6 +24,8 @@ Route::prefix('adminbps-tamu')->name('admin.')->group(function () {
         Route::get('/daftar-tamu', [AdminGuestController::class, 'index'])->name('guests.index');
         Route::get('/daftar-tamu/export', [AdminGuestController::class, 'export'])->name('guests.export');
         Route::get('/daftar-tamu/{visitorEntry}', [AdminGuestController::class, 'show'])->name('guests.show');
+        Route::patch('/daftar-tamu/{visitorEntry}', [AdminGuestController::class, 'update'])->name('guests.update');
+        Route::delete('/daftar-tamu/{visitorEntry}', [AdminGuestController::class, 'destroy'])->name('guests.destroy');
         Route::patch('/daftar-tamu/{visitorEntry}/status', [AdminGuestController::class, 'updateStatus'])->name('guests.status');
     });
 });

@@ -138,11 +138,16 @@ guestFilterForm?.querySelectorAll('select').forEach((select) => {
 });
 
 const detailModal = document.querySelector('[data-guest-detail-modal]');
+const guestEditModal = document.querySelector('[data-guest-edit-modal]');
+const guestEditForm = document.querySelector('[data-guest-edit-form]');
+const editOccupationSelect = guestEditForm?.querySelector('[data-edit-occupation]');
+const editPurposeSelect = guestEditForm?.querySelector('[data-edit-purpose]');
 const callCounterModal = document.querySelector('[data-call-counter-modal]');
 const callCounterForm = document.querySelector('[data-counter-form]');
 const callCounterSelect = document.querySelector('[data-counter-select]');
 const toast = document.querySelector('[data-admin-toast]');
 let pendingCallRow = null;
+let editingGuestRow = null;
 let busyCounterAssignments = callCounterSelect ? JSON.parse(callCounterSelect.dataset.counterOccupants ?? '{}') : {};
 let toastTimer;
 
@@ -154,6 +159,71 @@ function showAdminToast(message, isError = false) {
 	window.clearTimeout(toastTimer);
 	toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 3200);
 }
+
+function updateGuestEditVisibility() {
+	if (!guestEditForm) return;
+	const occupationOther = guestEditForm.querySelector('[data-edit-occupation-other-wrap]');
+	const occupationOtherInput = guestEditForm.querySelector('[data-edit-occupation-other]');
+	const purposeOther = guestEditForm.querySelector('[data-edit-purpose-other-wrap]');
+	const purposeOtherInput = guestEditForm.querySelector('[data-edit-purpose-other]');
+	const dtsenWrap = guestEditForm.querySelector('[data-edit-dtsen-wrap]');
+	const dtsenInput = guestEditForm.querySelector('[data-edit-dtsen]');
+	const showOccupationOther = editOccupationSelect?.value === 'LAINNYA';
+	const showPurposeOther = editPurposeSelect?.value === 'KEGIATAN';
+	const showDtsen = editPurposeSelect?.value === 'PST';
+
+	occupationOther?.classList.toggle('hidden', !showOccupationOther);
+	if (occupationOtherInput) occupationOtherInput.required = showOccupationOther;
+	purposeOther?.classList.toggle('hidden', !showPurposeOther);
+	if (purposeOtherInput) purposeOtherInput.required = showPurposeOther;
+	dtsenWrap?.classList.toggle('hidden', !showDtsen);
+	if (!showDtsen && dtsenInput) dtsenInput.checked = false;
+}
+
+function closeGuestEditModal() {
+	if (!guestEditModal) return;
+	guestEditModal.classList.add('hidden');
+	guestEditModal.setAttribute('aria-hidden', 'true');
+	document.body.style.overflow = '';
+	editingGuestRow = null;
+}
+
+guestEditForm?.addEventListener('change', updateGuestEditVisibility);
+guestEditModal?.querySelectorAll('[data-close-edit]').forEach((button) => {
+	button.addEventListener('click', closeGuestEditModal);
+});
+guestEditModal?.addEventListener('click', (event) => {
+	if (event.target === guestEditModal) closeGuestEditModal();
+});
+guestEditForm?.addEventListener('submit', async (event) => {
+	event.preventDefault();
+	if (!editingGuestRow) return;
+	const submitButton = guestEditForm.querySelector('[type="submit"]');
+	if (submitButton) submitButton.disabled = true;
+	try {
+		const response = await fetch(editingGuestRow.dataset.updateUrl, {
+			method: 'PATCH',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+			},
+			body: JSON.stringify(Object.fromEntries(new FormData(guestEditForm))),
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			const validationMessage = Object.values(result.errors ?? {}).flat()[0];
+			throw new Error(validationMessage ?? result.message ?? 'Data tamu tidak dapat diperbarui.');
+		}
+		closeGuestEditModal();
+		showAdminToast(result.message);
+		window.setTimeout(() => window.location.reload(), 700);
+	} catch (error) {
+		showAdminToast(error.message, true);
+	} finally {
+		if (submitButton) submitButton.disabled = false;
+	}
+});
 
 function openCallCounterModal(row) {
 	if (!callCounterModal || !callCounterSelect) return;
@@ -292,6 +362,63 @@ document.querySelectorAll('[data-status-select]').forEach((select) => {
 });
 
 document.addEventListener('click', async (event) => {
+	const deleteButton = event.target.closest('[data-delete-guest]');
+	if (deleteButton) {
+		const row = deleteButton.closest('[data-guest-row]');
+		if (!row || !window.confirm(`Hapus data tamu ${row.dataset.queueNo}? Tindakan ini tidak dapat dibatalkan.`)) return;
+		deleteButton.disabled = true;
+		try {
+			const response = await fetch(row.dataset.deleteUrl, {
+				method: 'DELETE',
+				headers: {
+					Accept: 'application/json',
+					'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+				},
+			});
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.message ?? 'Data tamu tidak dapat dihapus.');
+			showAdminToast(result.message);
+			window.setTimeout(() => window.location.reload(), 700);
+		} catch (error) {
+			showAdminToast(error.message, true);
+			deleteButton.disabled = false;
+		}
+		return;
+	}
+
+	const editButton = event.target.closest('[data-edit-guest]');
+	if (editButton) {
+		const row = editButton.closest('[data-guest-row]');
+		editButton.disabled = true;
+		try {
+			const response = await fetch(row.dataset.detailUrl, { headers: { Accept: 'application/json' } });
+			if (!response.ok) throw new Error('Data tamu tidak dapat dimuat.');
+			const guest = await response.json();
+			editingGuestRow = row;
+			guestEditForm.elements.namedItem('full_name').value = guest.full_name ?? '';
+			guestEditForm.elements.namedItem('gender').value = guest.gender ?? '';
+			guestEditForm.elements.namedItem('institution').value = guest.institution ?? '';
+			guestEditForm.elements.namedItem('phone').value = guest.phone ?? '';
+			guestEditForm.elements.namedItem('email').value = guest.email ?? '';
+			guestEditForm.elements.namedItem('occupation').value = guest.occupation_code ?? '';
+			guestEditForm.elements.namedItem('occupation_other').value = guest.occupation_other ?? '';
+			guestEditForm.elements.namedItem('purpose').value = guest.purpose_code ?? '';
+			guestEditForm.elements.namedItem('purpose_other').value = guest.purpose_other ?? '';
+			guestEditForm.elements.namedItem('dtsen_update').checked = Boolean(guest.dtsen_update_value);
+			guestEditModal.querySelector('[data-edit-queue]').textContent = `${guest.queue_no} · ${guest.created_at}`;
+			updateGuestEditVisibility();
+			guestEditModal.classList.remove('hidden');
+			guestEditModal.setAttribute('aria-hidden', 'false');
+			document.body.style.overflow = 'hidden';
+			guestEditForm.elements.namedItem('full_name').focus();
+		} catch (error) {
+			showAdminToast(error.message, true);
+		} finally {
+			editButton.disabled = false;
+		}
+		return;
+	}
+
 	const callButton = event.target.closest('[data-call-guest]');
 	if (callButton) {
 		const row = callButton.closest('[data-guest-row]');

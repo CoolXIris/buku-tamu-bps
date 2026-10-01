@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\QueueCall;
+use App\Models\ServiceCounter;
 use App\Models\User;
 use App\Models\VisitorEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,6 +34,33 @@ class AdminGuestListTest extends TestCase
             ->assertSee('PST0001')
             ->assertDontSee('LPSE0001')
             ->assertSee('Siti Aminah');
+    }
+
+    public function test_guest_list_badge_counts_only_waiting_and_serving_visitors(): void
+    {
+        $admin = User::factory()->create();
+        VisitorEntry::create($this->visitorData());
+        VisitorEntry::create($this->visitorData([
+            'queue_no' => 'PST0002',
+            'queue_number' => 2,
+            'service_status' => 'serving',
+        ]));
+        VisitorEntry::create($this->visitorData([
+            'queue_no' => 'PST0003',
+            'queue_number' => 3,
+            'service_status' => 'completed',
+        ]));
+
+        $this->actingAs($admin)
+            ->get(route('admin.guests.index'))
+            ->assertOk()
+            ->assertSee('class="nav-count">2</span>', false);
+
+        VisitorEntry::query()->update(['service_status' => 'completed']);
+
+        $this->get(route('admin.guests.index'))
+            ->assertOk()
+            ->assertSee('class="nav-count">0</span>', false);
     }
 
     public function test_guest_search_matches_terms_across_fields_when_elasticsearch_is_not_configured(): void
@@ -219,6 +247,103 @@ class AdminGuestListTest extends TestCase
             'call_announcement' => true,
             'counter_number' => 7,
         ])->assertUnprocessable()->assertJsonValidationErrors('counter_number');
+    }
+
+    public function test_guest_list_shows_dtsen_update_value_for_each_visitor(): void
+    {
+        $admin = User::factory()->create();
+        VisitorEntry::create($this->visitorData(['dtsen_update' => true]));
+        VisitorEntry::create($this->visitorData([
+            'queue_no' => 'PST0002',
+            'queue_number' => 2,
+            'dtsen_update' => false,
+        ]));
+        VisitorEntry::create($this->visitorData([
+            'queue_no' => 'LPSE0001',
+            'service_code' => 'LPSE',
+            'queue_number' => 1,
+            'purpose' => 'LPSE',
+        ]));
+
+        $this->actingAs($admin)
+            ->get(route('admin.guests.index'))
+            ->assertOk()
+            ->assertSee('Pengurusan Update DTSEN')
+            ->assertSee('Ya')
+            ->assertSee('Tidak')
+            ->assertSee('—');
+    }
+
+    public function test_admin_can_update_guest_details_and_dtsen_value(): void
+    {
+        $admin = User::factory()->create();
+        $entry = VisitorEntry::create($this->visitorData());
+
+        $this->actingAs($admin)
+            ->patchJson(route('admin.guests.update', $entry), [
+                'full_name' => 'Siti Aminah Baru',
+                'gender' => 'Perempuan',
+                'institution' => 'BPS Sumsel',
+                'phone' => '081299887766',
+                'email' => 'siti.baru@example.test',
+                'occupation' => 'LAINNYA',
+                'occupation_other' => 'Analis data',
+                'purpose' => 'PST',
+                'purpose_other' => '',
+                'dtsen_update' => true,
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Data tamu berhasil diperbarui.');
+
+        $this->assertDatabaseHas('visitor_entries', [
+            'id' => $entry->id,
+            'queue_no' => 'PST0001',
+            'full_name' => 'Siti Aminah Baru',
+            'institution' => 'BPS Sumsel',
+            'occupation' => 'LAINNYA',
+            'occupation_other' => 'Analis data',
+            'purpose' => 'PST',
+            'service_code' => 'PST',
+            'dtsen_update' => true,
+        ]);
+
+        $this->patchJson(route('admin.guests.update', $entry), [
+            'full_name' => 'Siti Aminah Baru',
+            'gender' => 'Perempuan',
+            'institution' => 'BPS Sumsel',
+            'phone' => '081299887766',
+            'email' => 'siti.baru@example.test',
+            'occupation' => 'LAINNYA',
+            'occupation_other' => 'Analis data',
+            'purpose' => 'KEGIATAN',
+            'purpose_other' => 'Rapat koordinasi',
+            'dtsen_update' => true,
+        ])->assertOk();
+
+        $this->assertDatabaseHas('visitor_entries', [
+            'id' => $entry->id,
+            'purpose' => 'KEGIATAN',
+            'service_code' => 'KEGIATAN',
+            'purpose_other' => 'Rapat koordinasi',
+            'dtsen_update' => false,
+        ]);
+    }
+
+    public function test_admin_can_delete_guest_and_related_queue_data(): void
+    {
+        $admin = User::factory()->create();
+        $entry = VisitorEntry::create($this->visitorData());
+        $call = QueueCall::create(['visitor_entry_id' => $entry->id, 'counter_number' => 2]);
+        ServiceCounter::query()->where('number', 2)->update(['visitor_entry_id' => $entry->id]);
+
+        $this->actingAs($admin)
+            ->deleteJson(route('admin.guests.destroy', $entry))
+            ->assertOk()
+            ->assertJsonPath('message', 'Data tamu berhasil dihapus.');
+
+        $this->assertDatabaseMissing('visitor_entries', ['id' => $entry->id]);
+        $this->assertDatabaseMissing('queue_calls', ['id' => $call->id]);
+        $this->assertDatabaseHas('service_counters', ['number' => 2, 'visitor_entry_id' => null]);
     }
 
     public function test_a_busy_counter_cannot_be_assigned_twice_and_is_freed_after_completion(): void

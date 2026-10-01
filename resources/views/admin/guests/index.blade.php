@@ -21,7 +21,7 @@
         </a>
         <nav class="admin-navigation" aria-label="Navigasi administrator">
             <a class="admin-nav-link" href="{{ route('admin.dashboard') }}"><span class="nav-glyph" aria-hidden="true">▥</span> Dashboard</a>
-            <a class="admin-nav-link is-current" href="{{ route('admin.guests.index') }}"><span class="nav-glyph" aria-hidden="true">♧</span> Daftar Buku Tamu <span class="nav-count">{{ $totalVisitors }}</span></a>
+            <a class="admin-nav-link is-current" href="{{ route('admin.guests.index') }}"><span class="nav-glyph" aria-hidden="true">♧</span> Daftar Buku Tamu <span class="nav-count">{{ $activeVisitorCount }}</span></a>
             <a class="admin-nav-link" href="{{ route('queue.screen') }}" target="_blank" rel="noopener"><span class="nav-glyph" aria-hidden="true">◉</span> Layar Antrean</a>
         </nav>
         <div class="admin-account">
@@ -84,6 +84,7 @@
                             <th class="name-column">Nama Tamu &amp; Instansi</th>
                             <th class="purpose-column">Keperluan</th>
                             <th class="time-column">Waktu Masuk</th>
+                            <th class="dtsen-column">Pengurusan Update DTSEN</th>
                             <th class="status-column">Status Pelayanan</th>
                             <th class="actions-column">Aksi</th>
                         </tr>
@@ -98,7 +99,7 @@
                             : ($statuses[$entry->service_status] ?? $entry->service_status);
                         $localCreatedAt = $entry->created_at->copy()->setTimezone('Asia/Jakarta');
                         @endphp
-                        <tr data-guest-row data-entry-id="{{ $entry->id }}" data-status-url="{{ route('admin.guests.status', $entry) }}" data-detail-url="{{ route('admin.guests.show', $entry) }}" data-queue-no="{{ $entry->queue_no }}">
+                        <tr data-guest-row data-entry-id="{{ $entry->id }}" data-status-url="{{ route('admin.guests.status', $entry) }}" data-detail-url="{{ route('admin.guests.show', $entry) }}" data-update-url="{{ route('admin.guests.update', $entry) }}" data-delete-url="{{ route('admin.guests.destroy', $entry) }}" data-queue-no="{{ $entry->queue_no }}">
                             <td><span class="queue-pill">{{ $entry->queue_no }}</span></td>
                             <td>
                                 <div class="guest-name-cell"><strong>{{ $entry->full_name }}</strong><span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -111,6 +112,7 @@
                             <td>
                                 <div class="arrival-time"><strong>{{ $entry->created_at->format('H:i') }} WIB</strong><small>{{ $entry->created_at->format('d/m/Y') }}</small></div>
                             </td>
+                            <td><span class="dtsen-value">{{ $entry->service_code === 'PST' ? ($entry->dtsen_update ? 'Ya' : 'Tidak') : '—' }}</span></td>
                             <td><span class="status-pill status-pill--{{ $entry->service_status }}"><i></i>{{ $statusName }}</span></td>
                             <td>
                                 <div class="row-actions">
@@ -134,12 +136,22 @@
                                             <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.6" />
                                         </svg>
                                     </button>
+                                    <button class="icon-action edit-action" type="button" data-edit-guest title="Ubah data {{ $entry->queue_no }}" aria-label="Ubah data tamu {{ $entry->queue_no }}">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="m14 5 5 5M4 20l4.2-.8L19 8.4a2.1 2.1 0 0 0-3-3L5.2 16.2 4 20Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
+                                    <button class="icon-action delete-action" type="button" data-delete-guest title="Hapus {{ $entry->queue_no }}" aria-label="Hapus data tamu {{ $entry->queue_no }}">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="empty-table-state"><span aria-hidden="true">⌕</span><strong>Tidak ada data tamu</strong>
                                     <p>Coba ubah kata pencarian atau pilihan filter.</p>
                                 </div>
@@ -179,6 +191,69 @@
                 <div><span>Status pelayanan</span><strong data-detail="status"></strong></div>
             </div>
             <div class="detail-footer"><button type="button" data-close-detail>Tutup</button></div>
+        </section>
+    </div>
+    <div class="guest-detail-backdrop hidden" data-guest-edit-modal aria-hidden="true">
+        <section class="guest-detail-modal guest-edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+            <button class="detail-close" type="button" data-close-edit aria-label="Tutup ubah data">×</button>
+            <div class="detail-heading"><span>UBAH DATA TAMU</span>
+                <h2 id="edit-title">Data tamu</h2>
+                <p data-edit-queue></p>
+            </div>
+            <form class="guest-edit-form" data-guest-edit-form>
+                <div class="form-grid">
+                    <label class="field field--wide">Nama lengkap
+                        <input name="full_name" required maxlength="150">
+                    </label>
+                    <label class="field field--wide">Asal instansi
+                        <input name="institution" required maxlength="180">
+                    </label>
+                    <label class="field">Jenis kelamin
+                        <select name="gender" required>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </label>
+                    <label class="field">Nomor HP
+                        <input type="tel" name="phone" required maxlength="30">
+                    </label>
+                    <label class="field field--wide">Email
+                        <input type="email" name="email" required maxlength="180">
+                    </label>
+                    <label class="field field--wide">Pekerjaan
+                        <select name="occupation" data-edit-occupation required>
+                            <option value="ASN">Aparatur Sipil Negara</option>
+                            <option value="SWASTA">Karyawan Swasta</option>
+                            <option value="WIRASWASTA">Wiraswasta</option>
+                            <option value="PENELITI">Peneliti</option>
+                            <option value="PELAJAR">Pelajar/Mahasiswa</option>
+                            <option value="LAINNYA">Lainnya</option>
+                        </select>
+                    </label>
+                    <label class="field field--wide conditional-field hidden" data-edit-occupation-other-wrap>Nama pekerjaan
+                        <input name="occupation_other" maxlength="100" data-edit-occupation-other>
+                    </label>
+                    <label class="field field--wide conditional-field hidden" data-edit-purpose-other-wrap>Nama kegiatan
+                        <input name="purpose_other" maxlength="150" data-edit-purpose-other>
+                    </label>
+                    <label class="field field--wide">Keperluan
+                        <select name="purpose" data-edit-purpose required>
+                            <option value="PST">Pelayanan Statistik Terpadu (PST)</option>
+                            <option value="LPSE">Layanan Pengadaan Secara Elektronik (LPSE)</option>
+                            <option value="PPID">Pejabat Pengelola Informasi dan Dokumentasi (PPID)</option>
+                            <option value="KEGIATAN">Kegiatan lainnya</option>
+                        </select>
+                    </label>
+                </div>
+                <label class="dtsen-checkbox conditional-field hidden" data-edit-dtsen-wrap>
+                    <input type="checkbox" name="dtsen_update" value="1" data-edit-dtsen>
+                    <span>Pengurusan update DTSEN</span>
+                </label>
+                <div class="detail-footer">
+                    <button type="button" data-close-edit>Batal</button>
+                    <button type="submit" class="edit-save-button">Simpan perubahan</button>
+                </div>
+            </form>
         </section>
     </div>
     <div class="guest-detail-backdrop hidden" data-call-counter-modal aria-hidden="true">

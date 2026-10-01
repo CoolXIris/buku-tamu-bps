@@ -575,7 +575,7 @@ button, input, select { font: inherit; }
 .filter-reset { color: #5988a0; font-size: 13px; text-decoration: none; white-space: nowrap; }
 .guest-table-panel { overflow: hidden; border: 1px solid #dce4eb; border-radius: 6px; background: white; box-shadow: 0 2px 5px #172d4208; }
 .table-scroll { width: 100%; overflow-x: auto; }
-.guest-table { width: 100%; min-width: 940px; border-collapse: collapse; table-layout: fixed; }
+.guest-table { width: 100%; min-width: 1140px; border-collapse: collapse; table-layout: fixed; }
 .guest-table thead { background: #f7f9fb; }
 .guest-table th { height: 48px; padding: 0 12px; border-bottom: 1px solid #dce4eb; color: #66788b; text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; }
 .guest-table th:first-child, .guest-table td:first-child { padding-left: 16px; }
@@ -584,7 +584,8 @@ button, input, select { font: inherit; }
 .guest-table .purpose-column { width: 25%; }
 .guest-table .time-column { width: 105px; }
 .guest-table .status-column { width: 142px; }
-.guest-table .actions-column { width: 222px; text-align: right; padding-right: 14px; }
+.guest-table .dtsen-column { width: 150px; }
+.guest-table .actions-column { width: 260px; text-align: right; padding-right: 14px; }
 .guest-table tbody tr { border-bottom: 1px solid #edf1f4; transition: background .14s; }
 .guest-table tbody tr:last-child { border-bottom: 0; }
 .guest-table tbody tr:hover { background: #fbfdfe; }
@@ -617,6 +618,9 @@ button, input, select { font: inherit; }
 .call-action:hover { border-color: #57afd0; background: #eaf8fd; }
 .action-spacer { border-color: transparent; background: transparent; pointer-events: none; }
 .detail-action { color: #587089; }
+.edit-action { color: #317d83; }
+.delete-action { color: #ae5550; }
+.delete-action:hover { border-color: #e6b7b3; background: #fff5f4; color: #a63832; }
 .row-status-select { width: 89px; height: 30px; padding: 0 6px; border: 1px solid #d8e1e9; border-radius: 5px; outline: 0; background: #fff; color: #465b70; font-size: 12px; cursor: pointer; }
 .row-status-select:focus { border-color: #65a9c4; }
 .row-status-select:disabled, .icon-action:disabled { opacity: .55; cursor: wait; }
@@ -646,6 +650,12 @@ button, input, select { font: inherit; }
 .detail-grid strong { overflow-wrap: anywhere; color: #34485b; font-size: 14px; font-weight: 600; }
 .detail-footer { margin: 0 -30px; padding: 12px 30px; display: flex; justify-content: flex-end; border-top: 1px solid #e8edf1; background: #f9fafb; }
 .detail-footer button { min-width: 75px; min-height: 31px; border: 1px solid #d5dee6; border-radius: 4px; background: #fff; color: #516477; font-size: 13px; font-weight: 600; cursor: pointer; }
+.guest-edit-modal { max-height: min(92vh, 850px); overflow-y: auto; padding-bottom: 0; }
+.guest-edit-form { margin-top: 22px; }
+.guest-edit-form .form-grid { margin-bottom: 16px; }
+.guest-edit-form .detail-footer { position: sticky; bottom: 0; gap: 8px; }
+.guest-edit-form .edit-save-button { border-color: #175a7d; background: #175a7d; color: #fff; }
+.guest-edit-form button:disabled { opacity: .6; cursor: wait; }
 .counter-picker-modal { padding-bottom: 0; }
 .counter-picker-field { margin: 24px 0; }
 .counter-picker-field select { width: 100%; min-height: 42px; padding: 0 11px; border: 1px solid #d8e0e8; border-radius: 4px; background: white; color: #243245; font: inherit; }
@@ -674,7 +684,7 @@ button, input, select { font: inherit; }
     .filter-control select { width: 100%; }
     .filter-submit, .filter-reset { min-height: 31px; flex: 1; }
     .filter-reset { display: inline-flex; align-items: center; justify-content: center; }
-    .guest-table { min-width: 850px; }
+    .guest-table { min-width: 1140px; }
     .table-footer { align-items: flex-start; flex-direction: column; gap: 8px; padding: 11px; }
     .table-footer nav[role=navigation] { width: 100%; overflow-x: auto; margin: 0; }
     .table-footer nav[role=navigation] > div:last-child { justify-content: flex-start; }

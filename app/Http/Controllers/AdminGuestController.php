@@ -88,16 +88,54 @@ class AdminGuestController extends Controller
             'purpose_other' => $visitorEntry->purpose_other,
             'service_code' => $visitorEntry->service_code,
             'dtsen_update' => $visitorEntry->dtsen_update ? 'Ya' : 'Tidak',
+            'dtsen_update_value' => $visitorEntry->dtsen_update,
             'gender' => $visitorEntry->gender,
             'phone' => $visitorEntry->phone,
             'email' => $visitorEntry->email,
             'occupation' => self::OCCUPATIONS[$visitorEntry->occupation] ?? $visitorEntry->occupation,
+            'occupation_code' => $visitorEntry->occupation,
             'occupation_other' => $visitorEntry->occupation_other,
+            'purpose_code' => $visitorEntry->purpose,
             'status' => $visitorEntry->service_status === 'serving' && $counterNumber
                 ? "Dilayani di loket ke-{$counterNumber}"
                 : (self::STATUSES[$visitorEntry->service_status] ?? $visitorEntry->service_status),
             'counter_number' => $counterNumber,
         ]);
+    }
+
+    public function update(Request $request, VisitorEntry $visitorEntry): JsonResponse
+    {
+        $validated = $request->validate([
+            'full_name' => ['required', 'string', 'max:150'],
+            'gender' => ['required', 'in:Laki-laki,Perempuan'],
+            'institution' => ['required', 'string', 'max:180'],
+            'phone' => ['required', 'string', 'max:30'],
+            'email' => ['required', 'email', 'max:180'],
+            'occupation' => ['required', 'in:ASN,SWASTA,WIRASWASTA,PENELITI,PELAJAR,LAINNYA'],
+            'occupation_other' => ['required_if:occupation,LAINNYA', 'nullable', 'string', 'max:100'],
+            'purpose' => ['required', 'in:PST,LPSE,PPID,KEGIATAN'],
+            'purpose_other' => ['required_if:purpose,KEGIATAN', 'nullable', 'string', 'max:150'],
+            'dtsen_update' => ['sometimes', 'boolean'],
+        ]);
+
+        $validated['service_code'] = $validated['purpose'];
+        $validated['occupation_other'] = $validated['occupation'] === 'LAINNYA'
+            ? ($validated['occupation_other'] ?? null)
+            : null;
+        $validated['purpose_other'] = $validated['purpose'] === 'KEGIATAN'
+            ? ($validated['purpose_other'] ?? null)
+            : null;
+        $validated['dtsen_update'] = $validated['purpose'] === 'PST' && $request->boolean('dtsen_update');
+        $visitorEntry->update($validated);
+
+        return response()->json(['message' => 'Data tamu berhasil diperbarui.']);
+    }
+
+    public function destroy(VisitorEntry $visitorEntry): JsonResponse
+    {
+        $visitorEntry->delete();
+
+        return response()->json(['message' => 'Data tamu berhasil dihapus.']);
     }
 
     public function updateStatus(Request $request, VisitorEntry $visitorEntry): JsonResponse
