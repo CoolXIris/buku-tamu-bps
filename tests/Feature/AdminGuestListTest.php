@@ -290,7 +290,12 @@ class AdminGuestListTest extends TestCase
     public function test_guest_list_export_downloads_an_xlsx_file(): void
     {
         $admin = User::factory()->create();
-        VisitorEntry::create($this->visitorData());
+        VisitorEntry::create($this->visitorData(['dtsen_update' => true]));
+        VisitorEntry::create($this->visitorData([
+            'queue_no' => 'PST0002',
+            'queue_number' => 2,
+            'dtsen_update' => false,
+        ]));
 
         $response = $this->actingAs($admin)
             ->get(route('admin.guests.export', ['service' => 'PST']));
@@ -305,6 +310,21 @@ class AdminGuestListTest extends TestCase
         $this->assertSame(true, $workbook->open($filePath));
         $this->assertNotFalse($workbook->locateName('xl/workbook.xml'));
         $workbook->close();
+
+        $reader = new \OpenSpout\Reader\XLSX\Reader;
+        $reader->open($filePath);
+        $rows = [];
+        foreach ($reader->getSheetIterator() as $sheet) {
+            foreach ($sheet->getRowIterator() as $row) {
+                $rows[] = $row->toArray();
+            }
+        }
+        $reader->close();
+
+        $this->assertContains('Pengurusan update DTSEN', $rows[0]);
+        $dtsenColumn = array_search('Pengurusan update DTSEN', $rows[0], true);
+        $this->assertSame('Ya', $rows[1][$dtsenColumn]);
+        $this->assertSame('Tidak', $rows[2][$dtsenColumn]);
     }
 
     public function test_guest_list_requires_admin_authentication(): void

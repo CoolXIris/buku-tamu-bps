@@ -80,10 +80,9 @@
                 </button>
             </div>
             <div class="employee-panel hidden" data-service-panel="employee">
-                <a class="service-card service-card--employee" href="{{ $pstDigitalUrl }}" target="_blank" rel="noopener noreferrer">
+                <a class="service-card service-card--employee" href="https://perpustakaan.bps.go.id/digilib/guestbook" target="_blank" rel="noopener noreferrer">
                     <span class="employee-icon" aria-hidden="true">PST<span>↗</span></span>
-                    <span class="service-title">PST Digital Sumsel</span>
-                    <span class="employee-description">Buka layanan statistik digital</span>
+                    <span class="service-title">Buku Tamu PST</span>
                     <span class="service-arrow" aria-hidden="true">↗</span>
                 </a>
             </div>
