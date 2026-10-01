@@ -352,12 +352,6 @@ async function updateGuestStatus(row, status, announce = false, counterNumber = 
 	}
 	setRowStatus(row, result.service_status, result.status_label);
 	showAdminToast(result.message);
-	if (announce && 'speechSynthesis' in window) {
-		window.speechSynthesis.cancel();
-		const announcement = new SpeechSynthesisUtterance(`Nomor antrean ${formatQueueNumberForSpeech(result.queue_no)}, silakan menuju loket ${result.counter_number}.`);
-		announcement.lang = 'id-ID';
-		window.speechSynthesis.speak(announcement);
-	}
 }
 
 document.querySelectorAll('[data-status-select]').forEach((select) => {
